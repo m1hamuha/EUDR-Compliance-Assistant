@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SubscriptionPlan {
+  TRIAL
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SupplierStatus {
+  INVITED
+  IN_PROGRESS
+  COMPLETED
+  VALIDATED
+  ERROR
+}
+
+enum GeometryType {
+  POINT
+  POLYGON
+}
+
+enum ValidationStatus {
+  PENDING
+  VALID
+  INVALID
+}
+
+enum Commodity {
+  CATTLE
+  COCOA
+  COFFEE
+  PALM_OIL
+  RUBBER
+  SOY
+  WOOD
+}
+
+enum AuditAction {
+  USER_LOGIN
+  USER_LOGOUT
+  USER_REGISTER
+  SUPPLIER_CREATE
+  SUPPLIER_UPDATE
+  SUPPLIER_DELETE
+  SUPPLIER_INVITE
+  PRODUCTION_PLACE_CREATE
+  PRODUCTION_PLACE_UPDATE
+  PRODUCTION_PLACE_DELETE
+  EXPORT_GENERATE
+  EXPORT_DOWNLOAD
+  SETTINGS_UPDATE
+  PASSWORD_CHANGE
+  PLAN_UPGRADE
+}
+
+model Client {
+  id            String           @id @default(cuid())
+  companyName   String
+  email         String           @unique
+  passwordHash  String
+  country       String
+  plan          SubscriptionPlan @default(TRIAL)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  suppliers     Supplier[]
+  exports       GeoJSONExport[]
+  auditLogs     AuditLog[]
+
+  @@map("clients")
+}
+
+model Supplier {
+  id              String        @id @default(cuid())
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  name            String
+  country         String
+  commodity       Commodity
+  contactEmail    String?
+  contactPhone    String?
+
+  status          SupplierStatus @default(INVITED)
+  invitationToken String        @unique
+  invitationSentAt DateTime?
+  completedAt     DateTime?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  productionPlaces ProductionPlace[]
+
+  @@index([clientId])
+  @@index([invitationToken])
+  @@map("suppliers")
+}
+
+model ProductionPlace {
+  id               String          @id @default(cuid())
+  supplierId       String
+  supplier         Supplier        @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  name             String
+  areaHectares     Float
+  geometryType     GeometryType
+
+  coordinates      Json
+  country          String
+
+  validationStatus ValidationStatus @default(PENDING)
+  validationErrors Json?
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([supplierId])
+  @@map("production_places")
+}
+
+model GeoJSONExport {
+  id            String    @id @default(cuid())
+  clientId      String
+  client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  fileUrl       String
+  fileSizeBytes Int
+  commodity     Commodity?
+
+  supplierIds   String[]
+
+  validationReport Json?
+  createdAt     DateTime  @default(now())
+
+  @@index([clientId])
+  @@map("geojson_exports")
+}
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  userId       String
+  user         Client      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action       AuditAction
+  resourceType String
+  resourceId   String?
+  metadata     Json?
+  ipAddress    String?
+  userAgent    String?
+
+  createdAt    DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
