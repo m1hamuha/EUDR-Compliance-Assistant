@@ -142,7 +142,12 @@ export async function POST(request: NextRequest) {
         coordinates: validatedData.coordinates,
         country: validatedData.country,
         validationStatus: validationResult?.valid ? 'VALID' : 'INVALID',
-        validationErrors: validationResult?.errors || null
+        validationErrors: validationResult?.errors ? validationResult.errors.map(e => ({
+          code: e.code,
+          message: e.message,
+          featureId: e.featureId,
+          featureName: e.featureName
+        })) : undefined
       }
     })
 
@@ -159,7 +164,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }
@@ -225,7 +230,12 @@ export async function PATCH(request: NextRequest) {
       data: {
         ...validatedData,
         validationStatus: validationResult?.valid ? 'VALID' : validationResult ? 'INVALID' : undefined,
-        validationErrors: validationResult?.errors || null
+        validationErrors: validationResult?.errors ? validationResult.errors.map(e => ({
+          code: e.code,
+          message: e.message,
+          featureId: e.featureId,
+          featureName: e.featureName
+        })) : undefined
       }
     })
 
@@ -235,7 +245,7 @@ export async function PATCH(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import L from 'leaflet'
 import { useMapStore } from '@/stores/useMapStore'
-import { MapContainer } from './MapContainer'
 
 interface PolygonDrawerProps {
   onComplete: (coordinates: [number, number][]) => void
@@ -12,16 +11,11 @@ interface PolygonDrawerProps {
 }
 
 export function PolygonDrawer({ onComplete, existingPolygon, readOnly }: PolygonDrawerProps) {
+  const mapRef = useRef<L.Map | null>(null)
   const polygonRef = useRef<L.Polygon | null>(null)
   const markersRef = useRef<L.CircleMarker[]>([])
-  const clickHandlerRef = useRef<L.LeafletEventHandlerFn | null>(null)
+  const clickHandlerRef = useRef<((e: L.LeafletMouseEvent) => void) | null>(null)
   const { currentPolygon, addPolygonVertex, clearPolygon } = useMapStore()
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-    return () => setIsClient(false)
-  }, [])
 
   useEffect(() => {
     if (existingPolygon?.length) {
@@ -39,12 +33,13 @@ export function PolygonDrawer({ onComplete, existingPolygon, readOnly }: Polygon
       map.off('click', clickHandlerRef.current)
     }
 
-    clickHandlerRef.current = (e: L.LeafletMouseEvent) => {
+    const clickHandler = (e: L.LeafletMouseEvent) => {
       const vertex: [number, number] = [e.latlng.lat, e.latlng.lng]
       addPolygonVertex(vertex)
     }
+    clickHandlerRef.current = clickHandler
 
-    map.on('click', clickHandlerRef.current)
+    map.on('click', clickHandler)
 
     return () => {
       if (clickHandlerRef.current) {
@@ -54,10 +49,8 @@ export function PolygonDrawer({ onComplete, existingPolygon, readOnly }: Polygon
   }, [readOnly, addPolygonVertex])
 
   useEffect(() => {
-    if (!isClient) return
-
     const mapContainer = document.getElementById('polygon-map-container')
-    if (!mapContainer) return
+    if (!mapContainer || mapRef.current) return
 
     const map = L.map(mapContainer, {
       zoomControl: true
@@ -75,12 +68,13 @@ export function PolygonDrawer({ onComplete, existingPolygon, readOnly }: Polygon
         map.off('click', clickHandlerRef.current)
       }
       map.remove()
+      mapRef.current = null
     }
-  }, [isClient, existingPolygon, handleMapReady])
+  }, [existingPolygon, handleMapReady])
 
   useEffect(() => {
     const mapContainer = document.getElementById('polygon-map-container')
-    if (!mapContainer || !isClient) return
+    if (!mapContainer) return
 
     const map = L.map(mapContainer, { zoomControl: false })
     if (existingPolygon?.length) {
@@ -131,7 +125,7 @@ export function PolygonDrawer({ onComplete, existingPolygon, readOnly }: Polygon
     return () => {
       map.remove()
     }
-  }, [currentPolygon, onComplete, existingPolygon, isClient])
+  }, [currentPolygon, onComplete, existingPolygon])
 
   if (readOnly && !existingPolygon?.length) {
     return (

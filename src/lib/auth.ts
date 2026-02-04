@@ -5,6 +5,28 @@ import { prisma } from './prisma'
 import type { SubscriptionPlan } from '@prisma/client'
 import { addMinutes } from 'date-fns'
 
+const JWT_SECRET = (() => {
+  const secret = process.env.AUTH_SECRET
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      'AUTH_SECRET environment variable is required and must be at least 32 characters. ' +
+      'Generate one using: openssl rand -base64 32'
+    )
+  }
+  return new TextEncoder().encode(secret)
+})()
+
+const REFRESH_TOKEN_SECRET = (() => {
+  const secret = process.env.REFRESH_SECRET
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      'REFRESH_SECRET environment variable is required and must be at least 32 characters. ' +
+      'Generate one using: openssl rand -base64 32'
+    )
+  }
+  return new TextEncoder().encode(secret)
+})()
+
 const TOKEN_EXPIRY = {
   ACCESS: '15m',
   REFRESH: '7d'

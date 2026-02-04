@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     } else {
       const validatedData = loginSchema.parse({ email, password })
 
-      const { allowed, remaining, lockedUntil } = await checkRateLimit(validatedData.email)
+      const { allowed, lockedUntil } = await checkRateLimit(validatedData.email)
       if (!allowed) {
         return NextResponse.json(
           {
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

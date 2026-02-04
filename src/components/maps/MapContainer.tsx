@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '@/stores/useMapStore'
@@ -24,33 +24,12 @@ export function MapContainer({
 }: MapContainerProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<L.Map | null>(null)
-  const tileLayerRef = useRef<L.TileLayer | null>(null)
-  const eventHandlersRef = { click: null as L.LeafletEventHandlerFn | null }
-  const moveEndHandlerRef = null as L.LeafletEventHandlerFn | null
   const { setCenter } = useMapStore()
   const [isClient, setIsClient] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
-    return () => setIsClient(false)
   }, [])
-
-  const cleanupMap = useCallback(() => {
-    if (mapInstanceRef.current) {
-      if (eventHandlersRef.click && onClick) {
-        mapInstanceRef.current.off('click', eventHandlersRef.click)
-      }
-      if (moveEndHandlerRef) {
-        mapInstanceRef.current.off('moveend', moveEndHandlerRef)
-      }
-      mapInstanceRef.current.remove()
-      mapInstanceRef.current = null
-    }
-    if (tileLayerRef.current) {
-      tileLayerRef.current = null
-    }
-  }, [onClick, moveEndHandlerRef])
 
   useEffect(() => {
     if (!isClient || !mapRef.current || mapInstanceRef.current) return
@@ -59,37 +38,34 @@ export function MapContainer({
       center,
       zoom,
       zoomControl: true,
-      attributionControl: true,
-      preferCanvas: true
+      attributionControl: true
     })
 
-    tileLayerRef.current = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19,
-      updateWhenIdle: true,
-      reuseTiles: true
+      maxZoom: 19
     }).addTo(map)
 
     if (onClick) {
-      eventHandlersRef.click = (e: L.LeafletMouseEvent) => onClick(e)
-      map.on('click', eventHandlersRef.click)
+      const clickHandler = (e: L.LeafletMouseEvent) => onClick(e)
+      map.on('click', clickHandler)
     }
 
-    const handleMoveEnd = () => {
+    map.on('moveend', () => {
       const mapCenter = map.getCenter()
       setCenter([mapCenter.lat, mapCenter.lng])
-    }
-    map.on('moveend', handleMoveEnd)
+    })
 
     mapInstanceRef.current = map
     onMapReady?.(map)
 
-    setIsMounted(true)
-
     return () => {
-      cleanupMap()
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
     }
-  }, [isClient, center, zoom, onClick, setCenter, cleanupMap, onMapReady])
+  }, [isClient, center, zoom, onClick, setCenter, onMapReady])
 
   if (!isClient) {
     return (
