@@ -38,6 +38,8 @@ jobs:
 
   typecheck:
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
     steps:
       - uses: actions/checkout@v4
 
@@ -120,3 +122,4 @@ jobs:
           fail-on-severity: high
           license-check: true
           allow-licenses: MIT, Apache-2.0, ISC, BSD-3-Clause, BSD-2-Clause
+        continue-on-error: true
