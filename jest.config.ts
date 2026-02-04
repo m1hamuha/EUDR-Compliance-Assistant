@@ -19,6 +19,7 @@ const config: Config = {
   transformIgnorePatterns: [
     '/node_modules/(?!@radix-ui|class-variance-authority|clsx|tailwind-merge|lucide-react)',
   ],
+  passWithNoTests: true,
 }
 
 export default createJestConfig(config)
