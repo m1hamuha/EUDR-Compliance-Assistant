@@ -67,7 +67,7 @@ export async function generateExport(
     }
   })
 
-  const features = productionPlaces.map(place => {
+  const features = productionPlaces.map((place: { coordinates: unknown; name: string; areaHectares: number; country: string; geometryType: string }) => {
     let geometry = place.coordinates as { type: string; coordinates: unknown }
 
     if (options.convertSmallToPoints && place.geometryType === 'POLYGON' && place.areaHectares <= 4) {
@@ -114,9 +114,9 @@ export async function generateExport(
   const validation = validateExportGeoJSON(optimizedGeojson)
 
   const summary = {
-    totalArea: features.reduce((sum, f) => sum + ((f.properties.Area as number) || 0), 0),
+    totalArea: features.reduce((sum: number, f: GeoJSONFeature) => sum + ((f.properties.Area as number) || 0), 0),
     totalPlaces: features.length,
-    byCountry: features.reduce((acc, f) => {
+    byCountry: features.reduce((acc: Record<string, number>, f: GeoJSONFeature) => {
       const country = f.properties.ProducerCountry as string
       acc[country] = (acc[country] || 0) + 1
       return acc
