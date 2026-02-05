@@ -13,18 +13,20 @@ const envSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url()
 })
 
-export function validateEnv() {
+export function validateEnv(): void {
   const result = envSchema.safeParse(process.env)
 
   if (!result.success) {
-    console.error('❌ Invalid environment variables:')
-    result.error.issues.forEach(issue => {
-      console.error(`  - ${issue.path.join('.')}: ${issue.message}`)
-    })
-    process.exit(1)
+    const errors = result.error.issues.map(issue =>
+      `  - ${issue.path.join('.')}: ${issue.message}`
+    ).join('\n')
+    throw new Error(`Invalid environment variables:\n${errors}`)
   }
+}
 
-  console.log('✅ Environment variables validated')
+export function tryValidateEnv(): boolean {
+  const result = envSchema.safeParse(process.env)
+  return result.success
 }
 
 export type Env = z.infer<typeof envSchema>

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import { validateEnv } from '@/lib/env-validation'
 
 const publicPaths = ['/login', '/signup', '/api/auth', '/supplier/']
 
@@ -19,8 +18,6 @@ export async function middleware(request: NextRequest) {
   if (pathname === '/') {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-
-  validateEnv()
 
   if (publicPaths.some(path => pathname.startsWith(path))) {
     const response = NextResponse.next()
