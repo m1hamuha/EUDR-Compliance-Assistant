@@ -16,6 +16,36 @@ jest.mock('next/cache', () => ({
   revalidateTag: jest.fn(),
 }))
 
+jest.mock('jose', () => ({
+  SignJWT: jest.fn().mockImplementation(() => ({
+    setProtectedHeader: jest.fn().mockReturnThis(),
+    setIssuedAt: jest.fn().mockReturnThis(),
+    setExpirationTime: jest.fn().mockReturnThis(),
+    sign: jest.fn().mockResolvedValue('mocked-jwt-token'),
+  })),
+  jwtVerify: jest.fn().mockResolvedValue({
+    payload: {
+      sub: 'test-user',
+      email: 'test@example.com',
+      plan: 'TRIAL',
+      type: 'access',
+      iat: Date.now() / 1000,
+      exp: Date.now() / 1000 + 900,
+    },
+  }),
+}))
+
+jest.mock('bcryptjs', () => ({
+  hash: jest.fn().mockResolvedValue('hashed-password'),
+  compare: jest.fn().mockResolvedValue(true),
+}))
+
+jest.mock('@turf/turf', () => ({
+  polygon: jest.fn().mockReturnValue({ geometry: { type: 'Polygon', coordinates: [] } }),
+  centroid: jest.fn().mockReturnValue({ geometry: { type: 'Point', coordinates: [0, 0] } }),
+  simplify: jest.fn((poly, opts) => poly),
+}))
+
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     client: {

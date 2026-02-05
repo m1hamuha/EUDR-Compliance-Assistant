@@ -17,9 +17,24 @@ const config: Config = {
     '**/*.test.[jt]s?(x)',
   ],
   transformIgnorePatterns: [
-    '/node_modules/(?!@radix-ui|class-variance-authority|clsx|tailwind-merge|lucide-react)',
+    'node_modules/(?!(jose|@jose|turf|@turf|uuid|zod|date-fns|bcryptjs|papaparse|archiver|leaflet|react-leaflet|@radix-ui|class-variance-authority|clsx|tailwind-merge|lucide-react)/)',
   ],
   passWithNoTests: true,
+  transform: {
+    '^.+\\.tsx?$': ['@swc/jest', {
+      jsc: {
+        parser: {
+          syntax: 'typescript',
+          tsx: true,
+        },
+        transform: {
+          react: {
+            runtime: 'automatic',
+          },
+        },
+      },
+    }],
+  },
 }
 
 export default createJestConfig(config)

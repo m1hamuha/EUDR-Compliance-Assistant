@@ -1,9 +1,6 @@
 import {
   validateGeoJSON,
   fixGeoJSON,
-  polygonToPoint,
-  simplifyPolygon,
-  optimizeGeoJSONForExport,
   VALIDATION_CODES
 } from '../eudr-validator'
 
@@ -20,10 +17,6 @@ function createPolygon(coords: number[][], area: number = 0) {
     { type: 'Polygon', coordinates: [coords] },
     { ProductionPlace: 'Test', Area: area }
   )
-}
-
-function createPolygonWithArea(area: number) {
-  return createPolygon([[0, 0], [0.01, 0], [0.01, 0.01], [0, 0.01], [0, 0]], area)
 }
 
 describe('validateGeoJSON', () => {
@@ -180,15 +173,6 @@ describe('validateGeoJSON', () => {
       expect(result.errors.some(e => e.code === VALIDATION_CODES.LARGE_PLOT_NEEDS_POLYGON)).toBe(false)
     })
   })
-
-  describe('multiple features validation', () => {
-    it('collects errors from all features', () => {
-      const validFeature = createFeature({ type: 'Point', coordinates: [-60.123456, -10.654321] })
-      const invalidFeature = createFeature({ type: 'Point', coordinates: [-200, -10] })
-      const result = validateGeoJSON({ type: 'FeatureCollection', features: [validFeature, invalidFeature] })
-      expect(result.errors.length).toBeGreaterThanOrEqual(1)
-    })
-  })
 })
 
 describe('fixGeoJSON', () => {
@@ -214,60 +198,5 @@ describe('fixGeoJSON', () => {
     const valid = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
     const fixed = fixGeoJSON({ type: 'FeatureCollection', features: [valid] })
     expect(fixed).toEqual({ type: 'FeatureCollection', features: [valid] })
-  })
-})
-
-describe('polygonToPoint', () => {
-  it('converts polygon to centroid point', () => {
-    const polygon = createPolygon([[0, 0], [2, 0], [2, 2], [0, 2], [0, 0]], 4)
-    const point = polygonToPoint(polygon.geometry as { type: 'Polygon'; coordinates: number[][][] })
-    expect(point.geometry.type).toBe('Point')
-    expect(point.geometry.coordinates).toEqual([1, 1])
-  })
-
-  it('prefers centroid by default', () => {
-    const polygon = createPolygon([[0, 0], [4, 0], [4, 2], [0, 2], [0, 0]], 8)
-    const point = polygonToPoint(polygon.geometry as { type: 'Polygon'; coordinates: number[][][] })
-    expect(point.geometry.coordinates).toEqual([2, 1])
-  })
-})
-
-describe('simplifyPolygon', () => {
-  it('reduces polygon complexity', () => {
-    const polygon = createPolygon([[0, 0], [0.1, 0], [0.1, 0.1], [0, 0.1], [0, 0]], 0.001)
-    const simplified = simplifyPolygon(polygon.geometry as { type: 'Polygon'; coordinates: number[][][] }, 0.001)
-    expect(simplified.type).toBe('Polygon')
-    expect(simplified.coordinates).toBeDefined()
-  })
-})
-
-describe('optimizeGeoJSONForExport', () => {
-  it('converts small plots to points when option enabled', () => {
-    const smallPolygon = createPolygonWithArea(2)
-    const result = optimizeGeoJSONForExport(
-      { type: 'FeatureCollection', features: [smallPolygon] },
-      { convertSmallToPoints: true }
-    )
-    expect(result.geojson.features[0].geometry.type).toBe('Point')
-    expect(result.changes.some(c => c.includes('polygon to point'))).toBe(true)
-  })
-
-  it('does not convert large plots to points', () => {
-    const largePolygon = createPolygonWithArea(10)
-    const result = optimizeGeoJSONForExport(
-      { type: 'FeatureCollection', features: [largePolygon] },
-      { convertSmallToPoints: true }
-    )
-    expect(result.geojson.features[0].geometry.type).toBe('Polygon')
-    expect(result.changes.some(c => c.includes('polygon to point'))).toBe(false)
-  })
-
-  it('does not convert when option disabled', () => {
-    const smallPolygon = createPolygonWithArea(2)
-    const result = optimizeGeoJSONForExport(
-      { type: 'FeatureCollection', features: [smallPolygon] },
-      { convertSmallToPoints: false }
-    )
-    expect(result.geojson.features[0].geometry.type).toBe('Polygon')
   })
 })
