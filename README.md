@@ -34,7 +34,7 @@ A comprehensive web application for companies to comply with the EU Deforestatio
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/m1hamuha/EUDR-Compliance-Assistant
 cd eudr-compliance-assistant
 ```
 
