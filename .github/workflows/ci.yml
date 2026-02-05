@@ -92,6 +92,7 @@ jobs:
     env:
       NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET || '00000000000000000000000000000000' }}
+      REFRESH_SECRET: ${{ secrets.REFRESH_SECRET || '00000000000000000000000000000000' }}
     steps:
       - uses: actions/checkout@v4
 
