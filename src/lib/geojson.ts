@@ -5,6 +5,7 @@ import { uploadToR2, generateExportPath } from './r2'
 import archiver from 'archiver'
 import Papa from 'papaparse'
 import { v4 as uuidv4 } from 'uuid'
+import { generateAuditLogForExport } from './audit'
 
 interface GeoJSONFeature {
   type: 'Feature'
@@ -139,7 +140,7 @@ export async function generateExport(
   ]
 
   if (options.includeAuditLog) {
-    const auditLog = generateAuditLog(productionPlaces)
+    const auditLog = generateAuditLogForExport(productionPlaces)
     files.push({ name: 'audit_log.json', buffer: Buffer.from(JSON.stringify(auditLog, null, 2)), type: 'application/json' })
   }
 
@@ -308,35 +309,6 @@ function generateValidationReport(
   lines.push('File ready for EU Information System upload.')
 
   return lines.join('\n')
-}
-
-function generateAuditLog(
-  places: Array<{
-    id: string
-    name: string
-    areaHectares: number
-    geometryType: string
-    country: string
-    createdAt: Date
-    updatedAt: Date
-    supplier: { id: string; name: string }
-  }>
-): object {
-  return {
-    generatedAt: new Date().toISOString(),
-    totalPlaces: places.length,
-    entries: places.map(place => ({
-      id: place.id,
-      name: place.name,
-      supplierId: place.supplier.id,
-      supplierName: place.supplier.name,
-      areaHectares: place.areaHectares,
-      geometryType: place.geometryType,
-      country: place.country,
-      createdAt: place.createdAt,
-      updatedAt: place.updatedAt
-    }))
-  }
 }
 
 async function createZipArchive(

@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import {
   verifyPassword,
   createAuthTokens,
   checkRateLimit,
   recordFailedAttempt,
+  recordSuccessfulAttempt,
   clearLoginAttempts,
-  validatePassword
+  validatePassword,
+  revokeRefreshToken,
+  revokeAllClientTokens,
+  getServerSession
 } from '@/lib/auth'
 import { z } from 'zod'
 
@@ -37,7 +42,7 @@ export async function POST(request: NextRequest) {
 
       if (existingClient) {
         return NextResponse.json(
-          { error: 'Email already registered' },
+          { success: false, error: { code: 'CONFLICT', message: 'Email already registered' } },
           { status: 409 }
         )
       }
@@ -45,13 +50,12 @@ export async function POST(request: NextRequest) {
       const { valid, errors } = validatePassword(validatedData.password)
       if (!valid) {
         return NextResponse.json(
-          { error: 'Password validation failed', details: errors },
+          { success: false, error: { code: 'VALIDATION_ERROR', message: 'Password validation failed', details: errors } },
           { status: 400 }
         )
       }
 
-      const { hashPassword } = await import('@/lib/auth')
-      const passwordHash = await hashPassword(validatedData.password)
+      const passwordHash = await bcrypt.hash(validatedData.password, 12)
 
       const client = await prisma.client.create({
         data: {
@@ -84,13 +88,16 @@ export async function POST(request: NextRequest) {
       })
 
       return NextResponse.json({
-        user: {
-          id: client.id,
-          email: client.email,
-          companyName: client.companyName,
-          plan: client.plan
-        },
-        tokens
+        success: true,
+        data: {
+          user: {
+            id: client.id,
+            email: client.email,
+            companyName: client.companyName,
+            plan: client.plan
+          },
+          tokens
+        }
       })
     } else {
       const validatedData = loginSchema.parse({ email, password })
@@ -98,10 +105,7 @@ export async function POST(request: NextRequest) {
       const { allowed, lockedUntil } = await checkRateLimit(validatedData.email)
       if (!allowed) {
         return NextResponse.json(
-          {
-            error: 'Too many login attempts. Please try again later.',
-            lockedUntil: lockedUntil?.toISOString()
-          },
+          { success: false, error: { code: 'RATE_LIMITED', message: 'Too many login attempts. Please try again later.', lockedUntil: lockedUntil?.toISOString() } },
           { status: 429 }
         )
       }
@@ -111,9 +115,9 @@ export async function POST(request: NextRequest) {
       })
 
       if (!client) {
-        recordFailedAttempt(validatedData.email)
+        await recordFailedAttempt(validatedData.email)
         return NextResponse.json(
-          { error: 'Invalid email or password' },
+          { success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid email or password' } },
           { status: 401 }
         )
       }
@@ -121,14 +125,15 @@ export async function POST(request: NextRequest) {
       const isValid = await verifyPassword(validatedData.password, client.passwordHash)
 
       if (!isValid) {
-        recordFailedAttempt(validatedData.email)
+        await recordFailedAttempt(validatedData.email)
         return NextResponse.json(
-          { error: 'Invalid email or password' },
+          { success: false, error: { code: 'UNAUTHORIZED', message: 'Invalid email or password' } },
           { status: 401 }
         )
       }
 
-      clearLoginAttempts(validatedData.email)
+      await clearLoginAttempts(validatedData.email)
+      await recordSuccessfulAttempt(validatedData.email)
 
       const tokens = await createAuthTokens({
         sub: client.id,
@@ -151,13 +156,16 @@ export async function POST(request: NextRequest) {
       })
 
       return NextResponse.json({
-        user: {
-          id: client.id,
-          email: client.email,
-          companyName: client.companyName,
-          plan: client.plan
-        },
-        tokens
+        success: true,
+        data: {
+          user: {
+            id: client.id,
+            email: client.email,
+            companyName: client.companyName,
+            plan: client.plan
+          },
+          tokens
+        }
       })
     }
   } catch (error) {
@@ -165,13 +173,13 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.issues },
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'Validation error', details: error.issues } },
         { status: 400 }
       )
     }
 
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Authentication failed' } },
       { status: 500 }
     )
   }
@@ -179,15 +187,24 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE() {
   try {
+    const session = await getServerSession()
+    if (session) {
+      await revokeAllClientTokens(session.sub)
+    }
+
     const cookieStore = await cookies()
+    const refreshToken = cookieStore.get('refresh-token')?.value
+    if (refreshToken) {
+      await revokeRefreshToken(refreshToken)
+    }
     cookieStore.delete('auth-token')
     cookieStore.delete('refresh-token')
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, data: { message: 'Logged out successfully' } })
   } catch (error) {
     console.error('Logout error:', error)
     return NextResponse.json(
-      { error: 'Logout failed' },
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Logout failed' } },
       { status: 500 }
     )
   }

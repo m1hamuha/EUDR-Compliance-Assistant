@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import type { SubscriptionPlan } from '@prisma/client'
-import { addMinutes } from 'date-fns'
+import { addDays, addMinutes } from 'date-fns'
 
 const JWT_SECRET = (() => {
   const secret = process.env.AUTH_SECRET
@@ -96,11 +96,21 @@ export async function createRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp'
 }
 
 export async function createAuthTokens(payload: Omit<JWTPayload, 'iat' | 'exp' | 'type'>): Promise<AuthTokens> {
-  const [accessToken, refreshToken] = await Promise.all([
-    createAccessToken(payload),
-    createRefreshToken(payload)
-  ])
+  const accessToken = await createAccessToken(payload)
+  const refreshToken = await createRefreshTokenWithStorage(payload)
   return { accessToken, refreshToken }
+}
+
+async function createRefreshTokenWithStorage(payload: Omit<JWTPayload, 'iat' | 'exp' | 'type'>): Promise<string> {
+  const token = crypto.randomUUID()
+  await prisma.refreshToken.create({
+    data: {
+      token,
+      clientId: payload.sub,
+      expiresAt: addDays(new Date(), 7)
+    }
+  })
+  return token
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload> {
@@ -121,53 +131,100 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
       return null
     }
 
-    const { sub, email, plan } = payload
-    return createAuthTokens({ sub, email, plan })
+    const stored = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken }
+    })
+
+    if (!stored || stored.expiresAt < new Date()) {
+      await prisma.refreshToken.deleteMany({ where: { token: refreshToken } })
+      return null
+    }
+
+    await prisma.refreshToken.delete({ where: { id: stored.id } })
+
+    const client = await prisma.client.findUnique({ where: { id: payload.sub } })
+    if (!client) return null
+
+    return createAuthTokens({
+      sub: client.id,
+      email: client.email,
+      plan: client.plan
+    })
   } catch {
     return null
   }
 }
 
-const loginAttempts = new Map<string, { count: number; lastAttempt: Date }>()
+export async function revokeRefreshToken(token: string): Promise<void> {
+  await prisma.refreshToken.deleteMany({ where: { token } })
+}
+
+export async function revokeAllClientTokens(clientId: string): Promise<void> {
+  await prisma.refreshToken.deleteMany({ where: { clientId } })
+}
+
+export async function cleanExpiredTokens(): Promise<void> {
+  await prisma.refreshToken.deleteMany({
+    where: {
+      expiresAt: { lt: new Date() }
+    }
+  })
+}
 
 export async function checkRateLimit(email: string): Promise<{ allowed: boolean; remaining: number; lockedUntil?: Date }> {
-  const attempts = loginAttempts.get(email)
+  const windowStart = new Date(Date.now() - LOCKOUT_DURATION_MINUTES * 60 * 1000)
 
-  if (!attempts) {
-    return { allowed: true, remaining: MAX_LOGIN_ATTEMPTS }
+  const attempts = await prisma.loginAttempt.count({
+    where: {
+      email,
+      createdAt: { gte: windowStart }
+    }
+  })
+
+  const latestLock = await prisma.loginAttempt.findFirst({
+    where: {
+      email,
+      locked: true
+    },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  if (latestLock) {
+    const lockedUntil = new Date(latestLock.createdAt.getTime() + LOCKOUT_DURATION_MINUTES * 60 * 1000)
+    if (new Date() < lockedUntil) {
+      return { allowed: false, remaining: 0, lockedUntil }
+    }
   }
 
-  const lockoutEnd = addMinutes(attempts.lastAttempt, LOCKOUT_DURATION_MINUTES)
-  if (new Date() < lockoutEnd) {
-    return { allowed: false, remaining: 0, lockedUntil: lockoutEnd }
-  }
-
-  if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
-    attempts.count = 0
-  }
-
-  const remaining = MAX_LOGIN_ATTEMPTS - attempts.count
+  const remaining = Math.max(0, MAX_LOGIN_ATTEMPTS - attempts)
   return { allowed: true, remaining }
 }
 
 export async function recordFailedAttempt(email: string): Promise<void> {
-  const attempts = loginAttempts.get(email)
+  const attempts = await prisma.loginAttempt.count({
+    where: {
+      email,
+      createdAt: { gte: new Date(Date.now() - LOCKOUT_DURATION_MINUTES * 60 * 1000) }
+    }
+  })
 
-  if (!attempts) {
-    loginAttempts.set(email, { count: 1, lastAttempt: new Date() })
-    return
-  }
-
-  attempts.count += 1
-  attempts.lastAttempt = new Date()
-
-  if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
-    attempts.lastAttempt = addMinutes(new Date(), LOCKOUT_DURATION_MINUTES)
-  }
+  await prisma.loginAttempt.create({
+    data: {
+      email,
+      success: false,
+      locked: attempts >= MAX_LOGIN_ATTEMPTS - 1
+    }
+  })
 }
 
-export function clearLoginAttempts(email: string): void {
-  loginAttempts.delete(email)
+export async function recordSuccessfulAttempt(email: string): Promise<void> {
+  await prisma.loginAttempt.create({
+    data: { email, success: true }
+  })
+}
+
+export async function clearLoginAttempts(email: string): Promise<void> {
+  await prisma.loginAttempt.deleteMany({ where: { email } })
 }
 
 export async function getServerSession(): Promise<JWTPayload | null> {

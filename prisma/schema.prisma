@@ -145,21 +145,45 @@ model GeoJSONExport {
 
 model AuditLog {
   id           String      @id @default(cuid())
-  userId       String
-  user         Client      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId     String
+  client       Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   action       AuditAction
   resourceType String
   resourceId   String?
   metadata     Json?
+  userEmail    String?
   ipAddress    String?
   userAgent    String?
 
   createdAt    DateTime    @default(now())
 
-  @@index([userId])
+  @@index([clientId])
   @@index([action])
   @@index([resourceType])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  clientId  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([clientId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  email     String
+  success   Boolean
+  locked    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+  @@map("login_attempts")
 }
