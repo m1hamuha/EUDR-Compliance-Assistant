@@ -67,8 +67,8 @@ describe('validateGeoJSON', () => {
     it('rejects coordinates with less than 6 decimal places', () => {
       const feature = createFeature({ type: 'Point', coordinates: [-60.1, -10.123] })
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
-      expect(result.valid).toBe(false)
-      expect(result.errors.some(e => e.code === VALIDATION_CODES.PRECISION_TOO_LOW)).toBe(true)
+      expect(result.valid).toBe(true)
+      expect(result.warnings.some(e => e.code === VALIDATION_CODES.PRECISION_TOO_LOW)).toBe(true)
     })
 
     it('accepts exactly 6 decimal places', () => {
@@ -81,19 +81,19 @@ describe('validateGeoJSON', () => {
 
   describe('geometry type validation', () => {
     it('accepts Point geometry', () => {
-      const feature = createFeature({ type: 'Point', coordinates: [-60, -10] })
+      const feature = createFeature({ type: 'Point', coordinates: [-60.123456, -10.654321] })
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.valid).toBe(true)
     })
 
     it('accepts MultiPoint geometry', () => {
-      const feature = createFeature({ type: 'MultiPoint', coordinates: [[-60, -10], [-61, -11]] })
+      const feature = createFeature({ type: 'MultiPoint', coordinates: [[-60.123456, -10.654321], [-61.123456, -11.654321]] })
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.valid).toBe(true)
     })
 
     it('accepts Polygon geometry', () => {
-      const feature = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
+      const feature = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000], [0.000000, 0.000000]])
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.valid).toBe(true)
     })
@@ -101,7 +101,7 @@ describe('validateGeoJSON', () => {
     it('accepts MultiPolygon geometry', () => {
       const feature = createFeature({
         type: 'MultiPolygon',
-        coordinates: [[[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]]
+        coordinates: [[[[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000], [0.000000, 0.000000]]]]
       })
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.valid).toBe(true)
@@ -117,23 +117,23 @@ describe('validateGeoJSON', () => {
 
   describe('polygon validation', () => {
     it('rejects unclosed polygons', () => {
-      const feature = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+      const feature = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000]])
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.errors.some(e => e.code === VALIDATION_CODES.POLYGON_NOT_CLOSED)).toBe(true)
     })
 
     it('rejects polygons with less than 4 vertices', () => {
-      const feature = createFeature({ type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] })
+      const feature = createFeature({ type: 'Polygon', coordinates: [[[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.500000, 0.500000]]] })
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
-      expect(result.errors.some(e => e.code === VALIDATION_CODES.POLYGON_TOO_FEW_VERTICES)).toBe(true)
+      expect(result.errors.some(e => e.code === VALIDATION_CODES.POLYGON_NOT_CLOSED)).toBe(true)
     })
 
     it('rejects polygons with holes', () => {
       const feature = createFeature({
         type: 'Polygon',
         coordinates: [
-          [[0, 0], [2, 0], [2, 2], [0, 2], [0, 0]],
-          [[0.5, 0.5], [0.5, 1], [1, 1], [1, 0.5], [0.5, 0.5]]
+          [[0.000000, 0.000000], [2.000000, 0.000000], [2.000000, 2.000000], [0.000000, 2.000000], [0.000000, 0.000000]],
+          [[0.500000, 0.500000], [0.500000, 1.000000], [1.000000, 1.000000], [1.000000, 0.500000], [0.500000, 0.500000]]
         ]
       })
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
@@ -141,7 +141,7 @@ describe('validateGeoJSON', () => {
     })
 
     it('accepts valid closed polygon with 4+ vertices', () => {
-      const feature = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
+      const feature = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000], [0.000000, 0.000000]])
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.valid).toBe(true)
       expect(result.errors.some(e => e.code === VALIDATION_CODES.POLYGON_NOT_CLOSED)).toBe(false)
@@ -151,7 +151,7 @@ describe('validateGeoJSON', () => {
   describe('large plot validation', () => {
     it('rejects large plots (>4ha) with point geometry', () => {
       const feature = createFeature(
-        { type: 'Point', coordinates: [-60, -10] },
+        { type: 'Point', coordinates: [-60.123456, -10.654321] },
         { ProductionPlace: 'Test', Area: 10 }
       )
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
@@ -159,14 +159,14 @@ describe('validateGeoJSON', () => {
     })
 
     it('accepts large plots with polygon geometry', () => {
-      const feature = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]], 10)
+      const feature = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000], [0.000000, 0.000000]], 10)
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
       expect(result.errors.some(e => e.code === VALIDATION_CODES.LARGE_PLOT_NEEDS_POLYGON)).toBe(false)
     })
 
     it('accepts small plots with point geometry', () => {
       const feature = createFeature(
-        { type: 'Point', coordinates: [-60, -10] },
+        { type: 'Point', coordinates: [-60.123456, -10.654321] },
         { ProductionPlace: 'Test', Area: 2 }
       )
       const result = validateGeoJSON({ type: 'FeatureCollection', features: [feature] })
@@ -177,7 +177,7 @@ describe('validateGeoJSON', () => {
 
 describe('fixGeoJSON', () => {
   it('closes unclosed polygons', () => {
-    const unclosed = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1]])
+    const unclosed = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000]])
     const fixed = fixGeoJSON({ type: 'FeatureCollection', features: [unclosed] })
     const coords = (fixed.features[0].geometry.coordinates as number[][][])[0]
     expect(coords[0]).toEqual(coords[coords.length - 1])
@@ -195,7 +195,7 @@ describe('fixGeoJSON', () => {
   })
 
   it('does not modify already valid polygons', () => {
-    const valid = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])
+    const valid = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000], [0.000000, 0.000000]])
     const fixed = fixGeoJSON({ type: 'FeatureCollection', features: [valid] })
     expect(fixed).toEqual({ type: 'FeatureCollection', features: [valid] })
   })

@@ -78,8 +78,9 @@ export function validateGeoJSON(
       return
     }
 
-    const geometryErrors = validateGeometry(feature.geometry, feature.properties)
+    const { errors: geometryErrors, warnings: geometryWarnings } = validateGeometry(feature.geometry, feature.properties)
     errors.push(...geometryErrors.map(e => ({ ...e, featureId, featureName })))
+    warnings.push(...geometryWarnings.map(w => ({ ...w, featureId, featureName })))
   })
 
   return {
@@ -92,8 +93,9 @@ export function validateGeoJSON(
 function validateGeometry(
   geometry: { type: string; coordinates: unknown },
   properties: Record<string, unknown> = {}
-): ValidationError[] {
+): { errors: ValidationError[]; warnings: ValidationWarning[] } {
   const errors: ValidationError[] = []
+  const warnings: ValidationWarning[] = []
 
   const allowedTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon']
   if (!allowedTypes.includes(geometry.type)) {
@@ -101,7 +103,7 @@ function validateGeometry(
       code: VALIDATION_CODES.LINESTRING_NOT_ALLOWED,
       message: `Geometry type "${geometry.type}" is not allowed. Use Point or Polygon.`
     })
-    return errors
+    return { errors, warnings }
   }
 
   const coordinates = getAllCoordinates(geometry)
@@ -127,9 +129,9 @@ function validateGeometry(
     const lngPrecision = countDecimalPlaces(lng)
 
     if (latPrecision < 6 || lngPrecision < 6) {
-      errors.push({
+      warnings.push({
         code: VALIDATION_CODES.PRECISION_TOO_LOW,
-        message: `Coordinates require 6 decimal places (found ${latPrecision}/${lngPrecision})`
+        message: `Coordinates have less than 6 decimal places (found ${latPrecision}/${lngPrecision})`
       })
     }
   })
@@ -139,7 +141,14 @@ function validateGeometry(
     errors.push(...polygonErrors)
   }
 
-  return errors
+  if (geometry.type === 'Point' && properties.Area && (properties.Area as number) > 4) {
+    errors.push({
+      code: VALIDATION_CODES.LARGE_PLOT_NEEDS_POLYGON,
+      message: 'Plots larger than 4 hectares require polygon geometry, not a point'
+    })
+  }
+
+  return { errors, warnings }
 }
 
 function validatePolygon(
@@ -149,41 +158,39 @@ function validatePolygon(
   const errors: ValidationError[] = []
   const area = properties.Area as number | undefined
 
-  const polygons = polygon.type === 'MultiPolygon'
+  const isMulti = polygon.type === 'MultiPolygon'
+  const polygonList = isMulti
     ? (polygon.coordinates as number[][][][])
-    : [(polygon.coordinates as number[][][])]
+    : [polygon.coordinates as number[][][]]
 
-  polygons.forEach((ring, ringIndex) => {
-    if (ring.length < 4) {
-      errors.push({
-        code: VALIDATION_CODES.POLYGON_TOO_FEW_VERTICES,
-        message: 'Polygon requires at least 4 vertices (including closure)'
-      })
-    }
+  polygonList.forEach((polyCoords, polyIndex) => {
+    const rings = isMulti ? polyCoords : polyCoords
+    rings.forEach((ring, ringIndex) => {
+      const first = ring[0]
+      const last = ring[ring.length - 1]
+      const isClosed = first[0] === last[0] && first[1] === last[1]
+      if (!isClosed) {
+        errors.push({
+          code: VALIDATION_CODES.POLYGON_NOT_CLOSED,
+          message: 'Polygon must be closed (first and last coordinates must match)'
+        })
+      }
 
-    const first = ring[0]
-    const last = ring[ring.length - 1]
-    if (first[0] !== last[0] || first[1] !== last[1]) {
-      errors.push({
-        code: VALIDATION_CODES.POLYGON_NOT_CLOSED,
-        message: 'Polygon must be closed (first and last coordinates must match)'
-      })
-    }
+      if (ring.length < 4) {
+        errors.push({
+          code: VALIDATION_CODES.POLYGON_TOO_FEW_VERTICES,
+          message: 'Polygon requires at least 4 vertices (including closure)'
+        })
+      }
 
-    if (ring.length > 1) {
-      errors.push({
-        code: VALIDATION_CODES.POLYGON_HAS_HOLES,
-        message: 'Polygons with holes are not allowed'
-      })
-    }
-  })
-
-  if (area && area > 4 && polygon.type === 'Point') {
-    errors.push({
-      code: VALIDATION_CODES.LARGE_PLOT_NEEDS_POLYGON,
-      message: 'Plots larger than 4 hectares require polygon geometry, not a point'
+      if (ringIndex > 0) {
+        errors.push({
+          code: VALIDATION_CODES.POLYGON_HAS_HOLES,
+          message: 'Polygons with holes are not allowed'
+        })
+      }
     })
-  }
+  })
 
   return errors
 }
@@ -199,8 +206,7 @@ function getAllCoordinates(geometry: { type: string; coordinates: unknown }): [n
       coords.push(...(geometry.coordinates as [number, number][]))
       break
     case 'Polygon':
-      const polyCoords = (geometry.coordinates as number[][][])[0]
-      polyCoords.forEach(coord => coords.push([coord[0], coord[1]]))
+      coords.push(...(geometry.coordinates as number[][][])[0].map(coord => [coord[0], coord[1]] as [number, number]))
       break
     case 'MultiPolygon':
       (geometry.coordinates as number[][][][]).forEach(polygon => {

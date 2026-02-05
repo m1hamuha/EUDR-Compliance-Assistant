@@ -35,6 +35,9 @@ jest.mock('jose', () => ({
   }),
 }))
 
+process.env.AUTH_SECRET = 'test-secret-key-at-least-32-characters-long-for-testing'
+process.env.REFRESH_SECRET = 'test-refresh-secret-key-at-least-32-characters-long'
+
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed-password'),
   compare: jest.fn().mockResolvedValue(true),
