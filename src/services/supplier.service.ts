@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { createAuditLog, AuditAction } from '@/lib/audit'
 import { supplierCreateSchema, supplierUpdateSchema } from '@/schemas'
@@ -19,7 +20,7 @@ export class SupplierService {
   async create(data: SupplierCreate) {
     const validated = supplierCreateSchema.parse(data)
 
-    const token = crypto.randomBytes(32).toString('hex')
+    const token = randomBytes(32).toString('hex')
 
     const supplier = await prisma.supplier.create({
       data: {
@@ -32,7 +33,7 @@ export class SupplierService {
     })
 
     await createAuditLog(
-      'SUPPLIER_CREATED' as AuditAction,
+      'SUPPLIER_CREATE' as AuditAction,
       'Supplier',
       supplier.id,
       this.context,
@@ -89,7 +90,7 @@ export class SupplierService {
     })
 
     await createAuditLog(
-      'SUPPLIER_UPDATED' as AuditAction,
+      'SUPPLIER_UPDATE' as AuditAction,
       'Supplier',
       id,
       this.context,
@@ -105,7 +106,7 @@ export class SupplierService {
     })
 
     await createAuditLog(
-      'SUPPLIER_DELETED' as AuditAction,
+      'SUPPLIER_DELETE' as AuditAction,
       'Supplier',
       id,
       this.context

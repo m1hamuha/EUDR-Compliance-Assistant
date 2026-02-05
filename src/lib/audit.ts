@@ -2,18 +2,21 @@ import { prisma } from './prisma'
 import { v4 as uuidv4 } from 'uuid'
 
 export type AuditAction =
-  | 'USER_REGISTERED'
   | 'USER_LOGIN'
   | 'USER_LOGOUT'
-  | 'SUPPLIER_CREATED'
-  | 'SUPPLIER_INVITED'
-  | 'SUPPLIER_UPDATED'
-  | 'PRODUCTION_PLACE_CREATED'
-  | 'PRODUCTION_PLACE_UPDATED'
-  | 'PRODUCTION_PLACE_DELETED'
-  | 'EXPORT_GENERATED'
-  | 'EXPORT_DOWNLOADED'
-  | 'PASSWORD_CHANGED'
+  | 'USER_REGISTER'
+  | 'SUPPLIER_CREATE'
+  | 'SUPPLIER_UPDATE'
+  | 'SUPPLIER_DELETE'
+  | 'SUPPLIER_INVITE'
+  | 'PRODUCTION_PLACE_CREATE'
+  | 'PRODUCTION_PLACE_UPDATE'
+  | 'PRODUCTION_PLACE_DELETE'
+  | 'EXPORT_GENERATE'
+  | 'EXPORT_DOWNLOAD'
+  | 'SETTINGS_UPDATE'
+  | 'PASSWORD_CHANGE'
+  | 'PLAN_UPGRADE'
 
 export interface AuditContext {
   clientId: string
@@ -27,19 +30,19 @@ export async function createAuditLog(
   entityType: string,
   entityId: string,
   context: AuditContext,
-  metadata: Record<string, unknown> = {}
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   await prisma.auditLog.create({
     data: {
       id: uuidv4(),
       action,
-      entityType,
-      entityId,
+      resourceType: entityType,
+      resourceId: entityId,
       clientId: context.clientId,
       userEmail: context.userEmail,
       ipAddress: context.ipAddress,
       userAgent: context.userAgent,
-      metadata,
+      metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : undefined,
       createdAt: new Date()
     }
   })
@@ -59,8 +62,8 @@ export async function getAuditLogs(
 ) {
   const where: Record<string, unknown> = { clientId }
 
-  if (options.entityType) where.entityType = options.entityType
-  if (options.entityId) where.entityId = options.entityId
+  if (options.entityType) where.resourceType = options.entityType
+  if (options.entityId) where.resourceId = options.entityId
   if (options.action) where.action = options.action
 
   if (options.startDate || options.endDate) {

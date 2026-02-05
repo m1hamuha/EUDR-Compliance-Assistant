@@ -34,9 +34,22 @@ export interface PaginatedData<T> {
   }
 }
 
-export function getCorrelationId(): string {
-  const headersList = headers()
-  return headersList.get('x-correlation-id') || crypto.randomUUID()
+export async function getCorrelationId(): Promise<string> {
+  const headersList = await headers()
+  const correlationId = headersList.get('x-correlation-id')
+  if (correlationId) return correlationId
+  
+  // Generate a simple correlation ID without relying on crypto
+  const array = new Uint8Array(16)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(array)
+  } else {
+    // Fallback for environments without crypto
+    for (let i = 0; i < array.length; i++) {
+      array[i] = Math.floor(Math.random() * 256)
+    }
+  }
+  return Array.from(array, b => b.toString(16).padStart(2, '0')).join('')
 }
 
 export function successResponse<T>(data: T, correlationId?: string): ApiResponse<T> {

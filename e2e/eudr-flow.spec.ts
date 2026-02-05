@@ -91,7 +91,7 @@ test.describe('Full EUDR Compliance Flow', () => {
     await page.click('button:has-text("Generate Export")')
 
     // Wait for processing
-    await expect(page.locator('text=Export ready'), { timeout: 60000 }).toBeVisible()
+    await expect(page.locator('text=Export ready')).toBeVisible()
 
     // Verify file was generated
     await expect(page.locator('a:has-text("Download ZIP")').first()).toBeVisible()

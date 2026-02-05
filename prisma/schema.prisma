@@ -91,6 +91,7 @@ model Supplier {
   status          SupplierStatus @default(INVITED)
   invitationToken String        @unique
   invitationSentAt DateTime?
+  invitationExpiresAt DateTime?
   completedAt     DateTime?
 
   createdAt       DateTime      @default(now())

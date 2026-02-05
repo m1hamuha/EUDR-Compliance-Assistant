@@ -99,6 +99,19 @@ jest.mock('@/lib/prisma', () => ({
   },
 }))
 
+if (typeof TextEncoder === "undefined") {
+  (global as any).TextEncoder = class TextEncoder {
+    encode(str: string): Uint8Array {
+      const bytes = []
+      for (let i = 0; i < str.length; i++) {
+        const charCode = str.charCodeAt(i)
+        bytes.push(charCode >> 8, charCode & 0xFF)
+      }
+      return new Uint8Array(bytes)
+    }
+  }
+}
+
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),

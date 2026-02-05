@@ -90,3 +90,4 @@ export type ProductionPlaceCreate = z.infer<typeof productionPlaceCreateSchema>
 export type ExportOptions = z.infer<typeof exportOptionsSchema>
 export type Login = z.infer<typeof loginSchema>
 export type Register = z.infer<typeof registerSchema>
+export type SupplierUpdate = z.infer<typeof supplierUpdateSchema>
