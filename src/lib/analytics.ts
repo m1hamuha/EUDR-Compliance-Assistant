@@ -52,6 +52,16 @@ export interface AnalyticsResult {
   atRisk: AtRiskSupplier[]
   /** Completed suppliers per ISO week for the trailing `weeks` window. */
   weeklyCompletions: Array<{ weekStart: string; count: number }>
+  /** Period-over-period velocity (default 7-day window) for the growth story. */
+  momentum: {
+    periodDays: number
+    completedThisPeriod: number
+    completedPrevPeriod: number
+    /** % change vs the previous period; null when there is no prior baseline. */
+    completedDeltaPct: number | null
+    newThisPeriod: number
+    newPrevPeriod: number
+  }
 }
 
 const COMPLETED_STATUSES: SupplierStatus[] = ['COMPLETED', 'VALIDATED']
@@ -66,11 +76,12 @@ function pct(part: number, whole: number): number {
 export function buildAnalytics(
   suppliers: AnalyticsSupplier[],
   places: AnalyticsPlace[],
-  options: { now?: Date; atRiskAfterDays?: number; weeks?: number } = {}
+  options: { now?: Date; atRiskAfterDays?: number; weeks?: number; periodDays?: number } = {}
 ): AnalyticsResult {
   const now = options.now ?? new Date()
   const atRiskAfterDays = options.atRiskAfterDays ?? 5
   const weeks = options.weeks ?? 8
+  const periodDays = options.periodDays ?? 7
 
   const totalSuppliers = suppliers.length
   const totalPlaces = places.length
@@ -140,6 +151,7 @@ export function buildAnalytics(
     .sort((a, b) => b.daysWaiting - a.daysWaiting)
 
   const weeklyCompletions = buildWeeklyCompletions(suppliers, now, weeks)
+  const momentum = buildMomentum(suppliers, now, periodDays)
 
   return {
     totalSuppliers,
@@ -153,7 +165,42 @@ export function buildAnalytics(
     byCommodity,
     coverageByCountry,
     atRisk,
-    weeklyCompletions
+    weeklyCompletions,
+    momentum
+  }
+}
+
+function buildMomentum(
+  suppliers: AnalyticsSupplier[],
+  now: Date,
+  periodDays: number
+): AnalyticsResult['momentum'] {
+  const period = periodDays * 24 * 60 * 60 * 1000
+  const thisStart = now.getTime() - period
+  const prevStart = now.getTime() - 2 * period
+
+  const inRange = (d: Date | null, from: number, to: number) =>
+    d !== null && d.getTime() > from && d.getTime() <= to
+
+  const completedThisPeriod = suppliers.filter((s) => inRange(s.completedAt, thisStart, now.getTime())).length
+  const completedPrevPeriod = suppliers.filter((s) => inRange(s.completedAt, prevStart, thisStart)).length
+  const newThisPeriod = suppliers.filter((s) => inRange(s.createdAt, thisStart, now.getTime())).length
+  const newPrevPeriod = suppliers.filter((s) => inRange(s.createdAt, prevStart, thisStart)).length
+
+  let completedDeltaPct: number | null
+  if (completedPrevPeriod > 0) {
+    completedDeltaPct = Math.round(((completedThisPeriod - completedPrevPeriod) / completedPrevPeriod) * 100)
+  } else {
+    completedDeltaPct = completedThisPeriod > 0 ? 100 : null
+  }
+
+  return {
+    periodDays,
+    completedThisPeriod,
+    completedPrevPeriod,
+    completedDeltaPct,
+    newThisPeriod,
+    newPrevPeriod
   }
 }
 

@@ -30,6 +30,24 @@ interface Analytics {
   coverageByCountry: Array<{ country: string; count: number }>
   atRisk: Array<{ id: string; name: string; country: string; commodity: string; daysWaiting: number; hasEmail: boolean }>
   weeklyCompletions: Array<{ weekStart: string; count: number }>
+  momentum: {
+    periodDays: number
+    completedThisPeriod: number
+    completedPrevPeriod: number
+    completedDeltaPct: number | null
+    newThisPeriod: number
+    newPrevPeriod: number
+  }
+}
+
+function DeltaBadge({ delta }: { delta: number | null }) {
+  if (delta === null) return <Badge variant="secondary">new</Badge>
+  const up = delta >= 0
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${up ? 'text-green-600' : 'text-red-600'}`}>
+      {up ? '▲' : '▼'} {Math.abs(delta)}%
+    </span>
+  )
 }
 
 function scoreColor(score: number): string {
@@ -238,7 +256,17 @@ export default function AnalyticsPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Completions per week</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Completions per week</CardTitle>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-muted-foreground">
+                  {data.momentum.completedThisPeriod} this week
+                </span>
+                <DeltaBadge delta={data.momentum.completedDeltaPct} />
+              </div>
+            </div>
+          </CardHeader>
           <CardContent>
             <div className="flex items-end justify-between gap-1 h-40">
               {data.weeklyCompletions.map((w) => (

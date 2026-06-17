@@ -1,16 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Users, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Users,
+  CheckCircle2,
+  AlertCircle,
   FileText,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
@@ -32,22 +33,39 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [seeding, setSeeding] = useState(false)
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await apiFetch('/api/dashboard/stats')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error)
+    }
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await apiFetch('/api/dashboard/stats')
-        if (response.ok) {
-          const data = await response.json()
-          setStats(data.stats)
-        }
-      } catch (error) {
-        console.error('Failed to fetch stats:', error)
-      }
-      setLoading(false)
-    }
     fetchStats()
-  }, [])
+  }, [fetchStats])
+
+  const handleLoadSampleData = async () => {
+    setSeeding(true)
+    try {
+      const response = await apiFetch('/api/demo/seed', { method: 'POST' })
+      if (response.ok) {
+        setLoading(true)
+        await fetchStats()
+      }
+    } catch (error) {
+      console.error('Failed to load sample data:', error)
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const completionRate = stats && stats.totalSuppliers > 0
     ? Math.round((stats.completedSuppliers / stats.totalSuppliers) * 100)
@@ -194,9 +212,15 @@ export default function DashboardPage() {
             <p className="text-muted-foreground text-center mb-4">
               Add your first supplier to begin collecting EUDR compliance data
             </p>
-            <Link href="/dashboard/suppliers">
-              <Button>Add Supplier</Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/dashboard/suppliers">
+                <Button>Add Supplier</Button>
+              </Link>
+              <Button variant="outline" onClick={handleLoadSampleData} disabled={seeding}>
+                {seeding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Load sample data
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

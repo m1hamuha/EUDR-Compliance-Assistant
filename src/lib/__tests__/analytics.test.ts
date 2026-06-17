@@ -89,6 +89,35 @@ describe('buildAnalytics', () => {
     })
   })
 
+  describe('momentum (period-over-period velocity)', () => {
+    const suppliers: AnalyticsSupplier[] = [
+      supplier({ id: 's1', status: 'COMPLETED', completedAt: ago(2), createdAt: ago(2) }),
+      supplier({ id: 's2', status: 'VALIDATED', completedAt: ago(4), createdAt: ago(3) }),
+      supplier({ id: 's3', status: 'COMPLETED', completedAt: ago(10), createdAt: ago(20) })
+    ]
+    const r = buildAnalytics(suppliers, [], { now: NOW, periodDays: 7 })
+
+    it('counts completions in the current vs previous window', () => {
+      expect(r.momentum.completedThisPeriod).toBe(2) // s1, s2 within last 7d
+      expect(r.momentum.completedPrevPeriod).toBe(1) // s3 within prior 7d
+      expect(r.momentum.completedDeltaPct).toBe(100) // (2-1)/1
+    })
+
+    it('counts new suppliers in the current window', () => {
+      expect(r.momentum.newThisPeriod).toBe(2) // s1, s2 created in last 7d
+    })
+
+    it('reports null delta when there is no prior baseline', () => {
+      const fresh = buildAnalytics(
+        [supplier({ status: 'COMPLETED', completedAt: ago(1), createdAt: ago(1) })],
+        [],
+        { now: NOW, periodDays: 7 }
+      )
+      expect(fresh.momentum.completedPrevPeriod).toBe(0)
+      expect(fresh.momentum.completedDeltaPct).toBe(100)
+    })
+  })
+
   it('ignores negative durations from clock skew', () => {
     const r = buildAnalytics(
       [supplier({ id: 'X', status: 'COMPLETED', invitationSentAt: ago(1), completedAt: ago(5) })],
