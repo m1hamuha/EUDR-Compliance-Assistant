@@ -60,6 +60,24 @@ export async function POST() {
       placesCreated += s.places.length
     }
 
+    // Backfill a rising compliance-score history so the analytics trend chart
+    // is populated immediately on a demo account.
+    const trend = [22, 31, 40, 48, 55, 59]
+    for (let i = 0; i < trend.length; i++) {
+      const score = trend[i]
+      await prisma.complianceSnapshot.create({
+        data: {
+          clientId,
+          score,
+          completionRate: Math.min(50, Math.round(score * 0.85)),
+          validationPassRate: Math.min(72, Math.round(score * 1.2)),
+          totalSuppliers: 8,
+          totalPlaces: 7,
+          createdAt: subDays(now, (trend.length - 1 - i) * 7)
+        }
+      })
+    }
+
     return NextResponse.json({ success: true, suppliersCreated, placesCreated })
   } catch (error) {
     console.error('Demo seed error:', error)

@@ -1,4 +1,4 @@
-import { buildAnalytics, type AnalyticsSupplier, type AnalyticsPlace } from '../analytics'
+import { buildAnalytics, shouldCreateSnapshot, type AnalyticsSupplier, type AnalyticsPlace } from '../analytics'
 import type { SupplierStatus, Commodity } from '@prisma/client'
 
 const NOW = new Date('2026-06-17T12:00:00Z')
@@ -115,6 +115,18 @@ describe('buildAnalytics', () => {
       )
       expect(fresh.momentum.completedPrevPeriod).toBe(0)
       expect(fresh.momentum.completedDeltaPct).toBe(100)
+    })
+  })
+
+  describe('shouldCreateSnapshot', () => {
+    it('creates one when there is no prior snapshot', () => {
+      expect(shouldCreateSnapshot(null, NOW)).toBe(true)
+    })
+    it('skips when the latest snapshot is from the same day', () => {
+      expect(shouldCreateSnapshot(new Date('2026-06-17T01:00:00Z'), NOW)).toBe(false)
+    })
+    it('creates one when the latest snapshot is from a previous day', () => {
+      expect(shouldCreateSnapshot(new Date('2026-06-16T23:00:00Z'), NOW)).toBe(true)
     })
   })
 

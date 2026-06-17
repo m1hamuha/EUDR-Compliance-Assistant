@@ -204,6 +204,17 @@ function buildMomentum(
   }
 }
 
+/**
+ * Whether a new daily compliance snapshot should be recorded. True when there
+ * is no prior snapshot, or the most recent one was taken on an earlier calendar
+ * day (UTC). Keeps at most one snapshot per day without needing a scheduler.
+ */
+export function shouldCreateSnapshot(lastSnapshotAt: Date | null, now: Date = new Date()): boolean {
+  if (!lastSnapshotAt) return true
+  const dayKey = (d: Date) => d.toISOString().slice(0, 10)
+  return dayKey(lastSnapshotAt) !== dayKey(now)
+}
+
 function aggregateCounts(values: string[]): Array<[string, number]> {
   const map = new Map<string, number>()
   for (const v of values) map.set(v, (map.get(v) ?? 0) + 1)
