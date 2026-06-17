@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css'
 import { useMapStore } from '@/stores/useMapStore'
 
 interface MapContainerProps {
-  children: React.ReactNode
+  children?: React.ReactNode
   center?: [number, number]
   zoom?: number
   onClick?: (e: L.LeafletMouseEvent) => void
