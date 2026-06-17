@@ -46,11 +46,11 @@ export default function LoginPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        setError(result.error || 'Login failed')
+        setError(result.error?.message || result.error || 'Login failed')
         return
       }
 
-      router.push('/')
+      router.push('/dashboard')
       router.refresh()
     } catch {
       setError('An error occurred. Please try again.')

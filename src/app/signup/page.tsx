@@ -68,11 +68,11 @@ export default function SignupPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        setError(result.error || 'Registration failed')
+        setError(result.error?.message || result.error || 'Registration failed')
         return
       }
 
-      router.push('/')
+      router.push('/dashboard')
       router.refresh()
     } catch {
       setError('An error occurred. Please try again.')

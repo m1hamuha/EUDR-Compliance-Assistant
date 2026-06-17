@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import type { SubscriptionPlan } from '@prisma/client'
-import { addDays, addMinutes } from 'date-fns'
+import { addDays } from 'date-fns'
 
 const JWT_SECRET = (() => {
   const secret = process.env.AUTH_SECRET

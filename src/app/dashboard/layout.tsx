@@ -15,11 +15,12 @@ import {
   X,
   Coffee
 } from 'lucide-react'
+
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Suppliers', href: '/suppliers', icon: Users },
-  { name: 'Exports', href: '/exports', icon: FileDown },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Suppliers', href: '/dashboard/suppliers', icon: Users },
+  { name: 'Exports', href: '/dashboard/exports', icon: FileDown },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
 export default function DashboardLayout({

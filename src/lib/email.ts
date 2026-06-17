@@ -116,4 +116,6 @@ export async function sendWelcomeEmail(email: string, companyName: string): Prom
   })
 }
 
-export default { sendSupplierInvitation, sendWelcomeEmail }
+const emailService = { sendSupplierInvitation, sendWelcomeEmail }
+
+export default emailService

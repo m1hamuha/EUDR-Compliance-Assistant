@@ -57,7 +57,7 @@ const countries = [
   { code: 'BO', name: 'Bolivia' }
 ]
 
-export function ProductionPlaceForm({ onSubmit, initialData, onComplete }: ProductionPlaceFormProps) {
+export function ProductionPlaceForm({ onSubmit, initialData }: ProductionPlaceFormProps) {
   const { t } = useLanguage()
   const [geometryType, setGeometryType] = useState<'POINT' | 'POLYGON'>(initialData?.geometryType || 'POLYGON')
   const [coordinates, setCoordinates] = useState<[number, number][] | [number, number]>(

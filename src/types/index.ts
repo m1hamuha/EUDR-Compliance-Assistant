@@ -10,7 +10,17 @@ import type {
   SubscriptionPlan
 } from '@prisma/client'
 
-export type { Client, Supplier, ProductionPlace, GeoJSONExport }
+export type {
+  Client,
+  Supplier,
+  ProductionPlace,
+  GeoJSONExport,
+  Commodity,
+  SupplierStatus,
+  GeometryType,
+  ValidationStatus,
+  SubscriptionPlan
+}
 
 export interface ClientWithRelations extends Client {
   suppliers: Supplier[]

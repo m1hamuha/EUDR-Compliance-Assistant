@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      data: suppliers,
+      suppliers,
       pagination: {
         page,
         limit,

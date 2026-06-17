@@ -9,9 +9,8 @@ import {
   Users, 
   CheckCircle2, 
   AlertCircle, 
-  FileText, 
-  ArrowRight,
-  Loader2
+  FileText,
+  ArrowRight
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
 
@@ -36,17 +35,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/suppliers?status=all')
+        const response = await fetch('/api/dashboard/stats')
         if (response.ok) {
           const data = await response.json()
-          setStats({
-            totalSuppliers: data.suppliers?.length || 0,
-            completedSuppliers: data.suppliers?.filter((s: { status: string }) => s.status === 'COMPLETED').length || 0,
-            inProgressSuppliers: data.suppliers?.filter((s: { status: string }) => s.status === 'IN_PROGRESS').length || 0,
-            totalPlaces: data.suppliers?.reduce((acc: number, s: { _count: { productionPlaces: number } }) => acc + s._count.productionPlaces, 0) || 0,
-            validationErrors: 0,
-            recentExports: []
-          })
+          setStats(data.stats)
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error)
@@ -67,7 +59,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Overview of your EUDR compliance data collection</p>
         </div>
-        <Link href="/suppliers">
+        <Link href="/dashboard/suppliers">
           <Button>
             Manage Suppliers
             <ArrowRight className="h-4 w-4 ml-2" />
@@ -184,7 +176,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            <Link href="/exports">
+            <Link href="/dashboard/exports">
               <Button variant="outline" className="w-full mt-4">
                 View All Exports
               </Button>
@@ -201,7 +193,7 @@ export default function DashboardPage() {
             <p className="text-muted-foreground text-center mb-4">
               Add your first supplier to begin collecting EUDR compliance data
             </p>
-            <Link href="/suppliers">
+            <Link href="/dashboard/suppliers">
               <Button>Add Supplier</Button>
             </Link>
           </CardContent>

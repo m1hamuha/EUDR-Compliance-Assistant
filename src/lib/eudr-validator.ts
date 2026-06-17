@@ -64,6 +64,17 @@ export function validateGeoJSON(
     return { valid: false, errors, warnings }
   }
 
+  if (options.maxFileSize) {
+    const sizeBytes = Buffer.byteLength(JSON.stringify(geojson), 'utf-8')
+    if (sizeBytes > options.maxFileSize) {
+      errors.push({
+        code: VALIDATION_CODES.FILE_TOO_LARGE,
+        message: `GeoJSON payload (${sizeBytes} bytes) exceeds the maximum allowed size of ${options.maxFileSize} bytes`
+      })
+      return { valid: false, errors, warnings }
+    }
+  }
+
   geojson.features.forEach((feature, index) => {
     const featureName = feature.properties?.ProductionPlace?.toString()
     const featureId = `feature-${index}`
@@ -108,7 +119,7 @@ function validateGeometry(
 
   const coordinates = getAllCoordinates(geometry)
 
-  coordinates.forEach((coord, index) => {
+  coordinates.forEach((coord) => {
     const [lng, lat] = coord
 
     if (lat < -90 || lat > 90) {
@@ -137,7 +148,7 @@ function validateGeometry(
   })
 
   if (geometry.type === 'Polygon' || geometry.type === 'MultiPolygon') {
-    const polygonErrors = validatePolygon(geometry, properties)
+    const polygonErrors = validatePolygon(geometry)
     errors.push(...polygonErrors)
   }
 
@@ -152,19 +163,17 @@ function validateGeometry(
 }
 
 function validatePolygon(
-  polygon: { type: string; coordinates: unknown },
-  properties: Record<string, unknown> = {}
+  polygon: { type: string; coordinates: unknown }
 ): ValidationError[] {
   const errors: ValidationError[] = []
-  const area = properties.Area as number | undefined
 
   const isMulti = polygon.type === 'MultiPolygon'
   const polygonList = isMulti
     ? (polygon.coordinates as number[][][][])
     : [polygon.coordinates as number[][][]]
 
-  polygonList.forEach((polyCoords, polyIndex) => {
-    const rings = isMulti ? polyCoords : polyCoords
+  polygonList.forEach((polyCoords) => {
+    const rings = polyCoords
     rings.forEach((ring, ringIndex) => {
       const first = ring[0]
       const last = ring[ring.length - 1]
@@ -232,7 +241,7 @@ export function fixGeoJSON(geojson: GeoJSONFeatureCollection): GeoJSONFeatureCol
 
     if (fixedGeometry.type === 'Polygon') {
       const rings = (fixedGeometry.coordinates as number[][][]).map(ring => {
-        let fixedRing = ring.map(coord => [
+        const fixedRing = ring.map(coord => [
           roundToPrecision(coord[0], 6),
           roundToPrecision(coord[1], 6)
         ])

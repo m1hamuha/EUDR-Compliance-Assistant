@@ -2,21 +2,24 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 
-const publicPaths = ['/login', '/signup', '/api/auth', '/supplier/']
+const publicPaths = ['/login', '/signup', '/api/auth', '/supplier/', '/thank-you']
 
 export function generateCorrelationId(): string {
   return crypto.randomUUID()
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (pathname === '/api/health' || pathname === '/_next') {
     return NextResponse.next()
   }
 
+  // Public marketing landing page
   if (pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    const response = NextResponse.next()
+    response.headers.set('x-correlation-id', generateCorrelationId())
+    return response
   }
 
   if (publicPaths.some(path => pathname.startsWith(path))) {

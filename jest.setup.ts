@@ -46,7 +46,7 @@ jest.mock('bcryptjs', () => ({
 jest.mock('@turf/turf', () => ({
   polygon: jest.fn().mockReturnValue({ geometry: { type: 'Polygon', coordinates: [] } }),
   centroid: jest.fn().mockReturnValue({ geometry: { type: 'Point', coordinates: [0, 0] } }),
-  simplify: jest.fn((poly, opts) => poly),
+  simplify: jest.fn((poly) => poly),
 }))
 
 jest.mock('@/lib/prisma', () => ({

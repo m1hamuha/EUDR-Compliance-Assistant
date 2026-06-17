@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,14 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { 
-  Plus, 
-  Search, 
-  Mail, 
-  MoreHorizontal, 
+import {
+  Plus,
+  Search,
+  Mail,
   Loader2,
-  FileText,
-  RefreshCw
+  FileText
 } from 'lucide-react'
 import { formatDate, COMMODITY_LABELS } from '@/lib/utils'
 import type { SupplierStatus, Commodity } from '@prisma/client'
@@ -77,7 +75,7 @@ export default function SuppliersPage() {
     contactEmail: ''
   })
 
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
@@ -88,18 +86,18 @@ export default function SuppliersPage() {
       const response = await fetch(`/api/suppliers?${params}`)
       if (response.ok) {
         const data = await response.json()
-        setSuppliers(data.suppliers)
+        setSuppliers(data.suppliers ?? [])
       }
     } catch (error) {
       console.error('Failed to fetch suppliers:', error)
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, statusFilter, commodityFilter])
 
   useEffect(() => {
     fetchSuppliers()
-  }, [search, statusFilter, commodityFilter])
+  }, [fetchSuppliers])
 
   const handleAddSupplier = async () => {
     try {

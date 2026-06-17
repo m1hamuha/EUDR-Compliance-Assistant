@@ -1,9 +1,7 @@
-import * as turf from '@turf/turf'
 import { optimizeGeoJSONForExport } from './eudr-validator'
 import prisma from './prisma'
 import { uploadToR2, generateExportPath } from './r2'
 import archiver from 'archiver'
-import Papa from 'papaparse'
 import { v4 as uuidv4 } from 'uuid'
 import { generateAuditLogForExport } from './audit'
 
