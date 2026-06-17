@@ -1,6 +1,11 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Instantiate the Resend client lazily so importing this module never throws
+// when RESEND_API_KEY is absent (e.g. during `next build` or in test/dev). The
+// per-function guards below short-circuit before this is ever called.
+function getResendClient(): Resend {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 interface InvitationEmailParams {
   email: string
@@ -21,8 +26,9 @@ export async function sendSupplierInvitation({
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  const invitationLink = `${appUrl}/supplier/invite/${invitationToken}`
+  const invitationLink = `${appUrl}/supplier/${invitationToken}`
 
+  const resend = getResendClient()
   await resend.emails.send({
     from: 'EUDR Compliance <noreply@eudr-compliance.com>',
     to: email,
@@ -79,6 +85,7 @@ export async function sendWelcomeEmail(email: string, companyName: string): Prom
     return
   }
 
+  const resend = getResendClient()
   await resend.emails.send({
     from: 'EUDR Compliance <noreply@eudr-compliance.com>',
     to: email,

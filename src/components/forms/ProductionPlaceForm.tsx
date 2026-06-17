@@ -104,10 +104,19 @@ export function ProductionPlaceForm({ onSubmit, initialData }: ProductionPlaceFo
     setSubmitting(true)
     setErrors([])
 
+    // The map components capture coordinates as [lat, lng] (Leaflet order), but
+    // GeoJSON — and therefore everything downstream (validation, storage, the EU
+    // export) — requires [lng, lat]. Convert at this boundary so the live map
+    // keeps using [lat, lng] while the API always receives valid GeoJSON.
+    const toGeoJson = (coords: [number, number][] | [number, number]) =>
+      geometryType === 'POLYGON'
+        ? (coords as [number, number][]).map(([lat, lng]) => [lng, lat] as [number, number])
+        : ([(coords as [number, number])[1], (coords as [number, number])[0]] as [number, number])
+
     try {
       await onSubmit({
         ...data,
-        coordinates: coordinates as [number, number][] | [number, number]
+        coordinates: toGeoJson(coordinates)
       })
     } finally {
       setSubmitting(false)

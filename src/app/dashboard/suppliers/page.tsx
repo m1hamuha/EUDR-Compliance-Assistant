@@ -29,6 +29,7 @@ import {
   Loader2,
   FileText
 } from 'lucide-react'
+import Papa from 'papaparse'
 import { formatDate, COMMODITY_LABELS } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
 import type { SupplierStatus, Commodity } from '@prisma/client'
@@ -68,6 +69,9 @@ export default function SuppliersPage() {
   const [commodityFilter, setCommodityFilter] = useState<string>('all')
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{ created: number; errors: Array<{ row: number; error: string }> } | null>(null)
 
   const [newSupplier, setNewSupplier] = useState({
     name: '',
@@ -118,6 +122,52 @@ export default function SuppliersPage() {
     }
   }
 
+  const handleImportCsv = () => {
+    if (!csvFile) return
+    setImporting(true)
+    setImportResult(null)
+
+    Papa.parse<Record<string, string>>(csvFile, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (h) => h.trim(),
+      complete: async (results) => {
+        try {
+          const suppliers = results.data
+            .map((row) => ({
+              name: (row.name ?? '').trim(),
+              country: (row.country ?? '').trim().toUpperCase(),
+              commodity: (row.commodity ?? '').trim().toUpperCase(),
+              contactEmail: (row.contactEmail ?? row.email ?? '').trim() || undefined
+            }))
+            .filter((s) => s.name && s.country)
+
+          const response = await apiFetch('/api/suppliers/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ suppliers })
+          })
+          const data = await response.json()
+
+          if (response.ok) {
+            setImportResult({ created: data.created ?? 0, errors: data.errors ?? [] })
+            fetchSuppliers()
+          } else {
+            setImportResult({ created: 0, errors: [{ row: 0, error: data.error || 'Import failed' }] })
+          }
+        } catch {
+          setImportResult({ created: 0, errors: [{ row: 0, error: 'Import failed' }] })
+        } finally {
+          setImporting(false)
+        }
+      },
+      error: () => {
+        setImportResult({ created: 0, errors: [{ row: 0, error: 'Could not parse the CSV file' }] })
+        setImporting(false)
+      }
+    })
+  }
+
   const handleSendReminder = async (supplierId: string) => {
     try {
       const response = await apiFetch(`/api/suppliers/${supplierId}/remind`, {
@@ -150,12 +200,34 @@ export default function SuppliersPage() {
                   Upload a CSV file with columns: name, country, commodity, contactEmail (optional)
                 </DialogDescription>
               </DialogHeader>
-              <div className="py-4">
-                <Input type="file" accept=".csv" />
+              <div className="py-4 space-y-3">
+                <Input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => {
+                    setCsvFile(e.target.files?.[0] ?? null)
+                    setImportResult(null)
+                  }}
+                />
+                {importResult && (
+                  <div className="text-sm rounded-lg border p-3 bg-gray-50">
+                    <p className="font-medium text-green-700">{importResult.created} supplier(s) imported</p>
+                    {importResult.errors.length > 0 && (
+                      <ul className="mt-2 list-disc pl-5 text-red-600">
+                        {importResult.errors.slice(0, 5).map((err, i) => (
+                          <li key={i}>Row {err.row}: {err.error}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancel</Button>
-                <Button>Import</Button>
+                <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Close</Button>
+                <Button onClick={handleImportCsv} disabled={!csvFile || importing}>
+                  {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Import
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
