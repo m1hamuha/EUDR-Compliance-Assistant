@@ -297,6 +297,9 @@ npm run test:watch
 
 ## Deployment
 
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for a complete step-by-step guide
+(Vercel + managed Postgres, environment variables, schema setup, and Docker).
+
 ### Vercel (Recommended)
 
 1. Connect your repository to Vercel

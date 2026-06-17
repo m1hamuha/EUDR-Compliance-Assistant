@@ -20,6 +20,29 @@ interface UserData {
 export default function SettingsPage() {
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportData = async () => {
+    setExporting(true)
+    try {
+      const response = await apiFetch('/api/account/export')
+      if (!response.ok) throw new Error('Export failed')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `eudr-data-export-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Failed to export data:', error)
+      alert('Could not export your data. Please try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -117,7 +140,10 @@ export default function SettingsPage() {
                 Download all your supplier and production place data
               </div>
             </div>
-            <Button variant="outline">Export</Button>
+            <Button variant="outline" onClick={handleExportData} disabled={exporting}>
+              {exporting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Export
+            </Button>
           </div>
           <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
             <div>
