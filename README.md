@@ -4,6 +4,7 @@ A comprehensive web application for companies to comply with the EU Deforestatio
 
 ## Features
 
+- **Compliance Analytics**: A Compliance Readiness Score, collection funnel, time-to-compliance, and an at-risk supplier list with one-click bulk reminders to drive completion
 - **Supplier Management**: Invite and manage suppliers across your supply chain
 - **Geolocation Collection**: Collect production place coordinates using interactive maps
 - **EUDR Validation**: Automatic validation of GeoJSON data against EUDR requirements

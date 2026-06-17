@@ -6,20 +6,22 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileDown, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  FileDown,
+  Settings,
   LogOut,
   Menu,
   X,
-  Coffee
+  Coffee,
+  TrendingUp
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Suppliers', href: '/dashboard/suppliers', icon: Users },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
   { name: 'Exports', href: '/dashboard/exports', icon: FileDown },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
