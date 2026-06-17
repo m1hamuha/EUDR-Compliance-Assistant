@@ -85,6 +85,16 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to access the application.
 
+### Try it in 30 seconds
+
+1. Sign up for an account (it logs you straight into the dashboard).
+2. On the empty dashboard, click **“Load sample data”** to populate a realistic
+   8-supplier supply chain.
+3. Open **Analytics** to see the Compliance Readiness Score, funnel, momentum,
+   and the at-risk list, then **Compliance report** for the printable one-pager.
+
+`GET /api/health` returns a DB-checked status for uptime monitoring.
+
 ## Project Structure
 
 ```
