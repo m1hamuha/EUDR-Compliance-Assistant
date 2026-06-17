@@ -46,6 +46,29 @@ describe('POST /api/portal/submit', () => {
     )
   })
 
+  it('closes an open polygon ring and stores it as VALID', async () => {
+    // An open 4-vertex ring as emitted by the map drawer (first !== last).
+    const res = await submitPOST(jsonRequest({
+      supplierId: 's1',
+      name: 'Plot B',
+      areaHectares: 12,
+      country: 'BR',
+      coordinates: [
+        [-60.123456, -10.123456],
+        [-60.654321, -10.123456],
+        [-60.654321, -10.654321],
+        [-60.123456, -10.654321]
+      ]
+    }))
+    const json = await res.json()
+
+    expect(json.validation.valid).toBe(true)
+    const createArg = mockPrisma.productionPlace.create.mock.calls[0][0]
+    const ring = createArg.data.coordinates.coordinates[0]
+    expect(ring[0]).toEqual(ring[ring.length - 1]) // ring closed
+    expect(createArg.data.validationStatus).toBe('VALID')
+  })
+
   it('flags an out-of-bounds coordinate as INVALID and records errors', async () => {
     const res = await submitPOST(jsonRequest({
       supplierId: 's1',

@@ -30,6 +30,7 @@ import {
   FileText
 } from 'lucide-react'
 import { formatDate, COMMODITY_LABELS } from '@/lib/utils'
+import { apiFetch } from '@/lib/api-client'
 import type { SupplierStatus, Commodity } from '@prisma/client'
 
 interface Supplier {
@@ -83,7 +84,7 @@ export default function SuppliersPage() {
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (commodityFilter !== 'all') params.set('commodity', commodityFilter)
 
-      const response = await fetch(`/api/suppliers?${params}`)
+      const response = await apiFetch(`/api/suppliers?${params}`)
       if (response.ok) {
         const data = await response.json()
         setSuppliers(data.suppliers ?? [])
@@ -101,7 +102,7 @@ export default function SuppliersPage() {
 
   const handleAddSupplier = async () => {
     try {
-      const response = await fetch('/api/suppliers', {
+      const response = await apiFetch('/api/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSupplier)
@@ -119,7 +120,7 @@ export default function SuppliersPage() {
 
   const handleSendReminder = async (supplierId: string) => {
     try {
-      const response = await fetch(`/api/suppliers/${supplierId}/remind`, {
+      const response = await apiFetch(`/api/suppliers/${supplierId}/remind`, {
         method: 'POST'
       })
       if (response.ok) {

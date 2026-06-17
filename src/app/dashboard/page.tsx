@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
+import { apiFetch } from '@/lib/api-client'
 
 interface DashboardStats {
   totalSuppliers: number
@@ -35,7 +36,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/dashboard/stats')
+        const response = await apiFetch('/api/dashboard/stats')
         if (response.ok) {
           const data = await response.json()
           setStats(data.stats)

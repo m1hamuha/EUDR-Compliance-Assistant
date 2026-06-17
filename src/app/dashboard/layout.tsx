@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { apiFetch } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
 import { 
   LayoutDashboard, 
@@ -35,17 +36,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const getUser = async () => {
-      let response = await fetch('/api/auth/me')
-
-      // Access token may have expired (15m). Attempt a silent refresh using the
-      // long-lived refresh-token cookie before giving up on the session.
-      if (response.status === 401) {
-        const refreshed = await fetch('/api/auth/refresh', { method: 'POST' })
-        if (refreshed.ok) {
-          response = await fetch('/api/auth/me')
-        }
-      }
-
+      // apiFetch silently refreshes an expired access token and retries.
+      const response = await apiFetch('/api/auth/me')
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
