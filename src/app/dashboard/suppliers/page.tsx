@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -377,7 +378,9 @@ export default function SuppliersPage() {
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{supplier.name}</span>
+                      <Link href={`/dashboard/suppliers/${supplier.id}`} className="font-medium hover:text-emerald-700 hover:underline">
+                        {supplier.name}
+                      </Link>
                       <Badge variant={statusColors[supplier.status]}>
                         {statusLabels[supplier.status]}
                       </Badge>
@@ -402,10 +405,12 @@ export default function SuppliersPage() {
                         Remind
                       </Button>
                     ) : (
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
+                      <Link href={`/dashboard/suppliers/${supplier.id}`}>
+                        <Button variant="outline" size="sm">
+                          <FileText className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 </div>
