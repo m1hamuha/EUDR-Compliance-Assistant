@@ -115,6 +115,22 @@ if (typeof TextEncoder === "undefined") {
   }
 }
 
+// jsdom's crypto implementation may lack randomUUID; polyfill it for tests.
+if (typeof globalThis.crypto === 'undefined') {
+  (globalThis as any).crypto = {}
+}
+if (typeof globalThis.crypto.randomUUID !== 'function') {
+  (globalThis.crypto as { randomUUID: () => string }).randomUUID = () =>
+    '00000000-0000-4000-8000-' + Math.random().toString(16).slice(2, 14).padEnd(12, '0')
+}
+if (typeof globalThis.crypto.getRandomValues !== 'function') {
+  (globalThis.crypto as { getRandomValues: <T extends ArrayBufferView | null>(a: T) => T }).getRandomValues = (arr) => {
+    const view = arr as unknown as Uint8Array
+    for (let i = 0; i < view.length; i++) view[i] = Math.floor(Math.random() * 256)
+    return arr
+  }
+}
+
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),

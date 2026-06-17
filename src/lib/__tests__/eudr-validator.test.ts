@@ -1,6 +1,9 @@
 import {
   validateGeoJSON,
   fixGeoJSON,
+  polygonToPoint,
+  simplifyPolygon,
+  optimizeGeoJSONForExport,
   VALIDATION_CODES
 } from '../eudr-validator'
 
@@ -198,5 +201,97 @@ describe('fixGeoJSON', () => {
     const valid = createPolygon([[0.000000, 0.000000], [1.000000, 0.000000], [1.000000, 1.000000], [0.000000, 1.000000], [0.000000, 0.000000]])
     const fixed = fixGeoJSON({ type: 'FeatureCollection', features: [valid] })
     expect(fixed).toEqual({ type: 'FeatureCollection', features: [valid] })
+  })
+
+  it('leaves features without geometry untouched', () => {
+    const noGeometry = { type: 'Feature' as const, properties: {}, geometry: null as unknown as { type: string; coordinates: unknown } }
+    const fixed = fixGeoJSON({ type: 'FeatureCollection', features: [noGeometry] })
+    expect(fixed.features[0]).toBe(noGeometry)
+  })
+})
+
+describe('maxFileSize guard', () => {
+  it('rejects payloads larger than the configured limit', () => {
+    const feature = createFeature({ type: 'Point', coordinates: [-60.123456, -10.654321] })
+    const result = validateGeoJSON(
+      { type: 'FeatureCollection', features: [feature] },
+      { maxFileSize: 10 }
+    )
+    expect(result.valid).toBe(false)
+    expect(result.errors[0].code).toBe(VALIDATION_CODES.FILE_TOO_LARGE)
+  })
+
+  it('accepts payloads within the configured limit', () => {
+    const feature = createFeature({ type: 'Point', coordinates: [-60.123456, -10.654321] })
+    const result = validateGeoJSON(
+      { type: 'FeatureCollection', features: [feature] },
+      { maxFileSize: 10_000_000 }
+    )
+    expect(result.valid).toBe(true)
+  })
+})
+
+describe('polygonToPoint', () => {
+  const polygon = {
+    type: 'Polygon' as const,
+    coordinates: [[[0, 0], [2, 0], [2, 2], [0, 2], [0, 0]]]
+  }
+
+  it('returns a centroid feature when preferCentroid is true', () => {
+    const point = polygonToPoint(polygon, { preferCentroid: true })
+    expect(point.geometry.type).toBe('Point')
+  })
+
+  it('returns the bounding-box center when preferCentroid is false', () => {
+    const point = polygonToPoint(polygon, { preferCentroid: false })
+    expect(point.geometry.type).toBe('Point')
+    expect(point.geometry.coordinates).toEqual([1, 1])
+  })
+})
+
+describe('simplifyPolygon', () => {
+  it('returns a Polygon geometry', () => {
+    const polygon = {
+      type: 'Polygon' as const,
+      coordinates: [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]
+    }
+    const simplified = simplifyPolygon(polygon, 0.001)
+    expect(simplified.type).toBe('Polygon')
+  })
+})
+
+describe('optimizeGeoJSONForExport', () => {
+  it('converts small polygons to points when requested', () => {
+    const small = createPolygon(
+      [[0, 0], [0.001, 0], [0.001, 0.001], [0, 0.001], [0, 0]],
+      2
+    )
+    const { geojson, changes } = optimizeGeoJSONForExport(
+      { type: 'FeatureCollection', features: [small] },
+      { convertSmallToPoints: true, smallPlotThreshold: 4 }
+    )
+    expect(geojson.features[0].geometry.type).toBe('Point')
+    expect(changes.some(c => c.includes('point'))).toBe(true)
+  })
+
+  it('leaves large polygons as polygons', () => {
+    const large = createPolygon(
+      [[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]],
+      50
+    )
+    const { geojson } = optimizeGeoJSONForExport(
+      { type: 'FeatureCollection', features: [large] },
+      { convertSmallToPoints: true, smallPlotThreshold: 4 }
+    )
+    expect(geojson.features[0].geometry.type).toBe('Polygon')
+  })
+
+  it('returns no changes when no optimization options are set', () => {
+    const feature = createPolygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]], 10)
+    const { changes } = optimizeGeoJSONForExport(
+      { type: 'FeatureCollection', features: [feature] },
+      {}
+    )
+    expect(changes).toHaveLength(0)
   })
 })

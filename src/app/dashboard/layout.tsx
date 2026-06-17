@@ -35,7 +35,17 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const getUser = async () => {
-      const response = await fetch('/api/auth/me')
+      let response = await fetch('/api/auth/me')
+
+      // Access token may have expired (15m). Attempt a silent refresh using the
+      // long-lived refresh-token cookie before giving up on the session.
+      if (response.status === 401) {
+        const refreshed = await fetch('/api/auth/refresh', { method: 'POST' })
+        if (refreshed.ok) {
+          response = await fetch('/api/auth/me')
+        }
+      }
+
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)

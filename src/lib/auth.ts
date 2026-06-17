@@ -102,7 +102,15 @@ export async function createAuthTokens(payload: Omit<JWTPayload, 'iat' | 'exp' |
 }
 
 async function createRefreshTokenWithStorage(payload: Omit<JWTPayload, 'iat' | 'exp' | 'type'>): Promise<string> {
-  const token = crypto.randomUUID()
+  // Refresh tokens are signed JWTs (verifiable via REFRESH_SECRET) AND tracked
+  // in the database so they can be revoked. A unique `jti` guarantees a distinct
+  // token string even when issued within the same second for the same client.
+  const token = await new SignJWT({ ...payload, type: 'refresh', jti: crypto.randomUUID() })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(TOKEN_EXPIRY.REFRESH)
+    .sign(REFRESH_TOKEN_SECRET)
+
   await prisma.refreshToken.create({
     data: {
       token,
