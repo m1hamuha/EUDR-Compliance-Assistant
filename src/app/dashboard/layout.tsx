@@ -15,12 +15,14 @@ import {
   Menu,
   X,
   Leaf,
-  TrendingUp
+  TrendingUp,
+  Map as MapIcon
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Suppliers', href: '/dashboard/suppliers', icon: Users },
+  { name: 'Map', href: '/dashboard/map', icon: MapIcon },
   { name: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
   { name: 'Exports', href: '/dashboard/exports', icon: FileDown },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
