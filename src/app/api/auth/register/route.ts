@@ -8,6 +8,7 @@ import {
   setSessionCookies
 } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
+import { sendWelcomeEmail } from '@/lib/email'
 
 const registerSchema = z.object({
   companyName: z.string().min(2).max(255),
@@ -53,6 +54,13 @@ export async function POST(request: NextRequest) {
       clientId: client.id,
       userEmail: client.email
     })
+
+    // Best-effort welcome email — must not fail registration.
+    try {
+      await sendWelcomeEmail(client.email, client.companyName)
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError)
+    }
 
     const tokens = await createAuthTokens({
       sub: client.id,
