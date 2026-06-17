@@ -88,42 +88,62 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   │   ├── auth/          # Authentication endpoints
-│   │   ├── suppliers/     # Supplier CRUD operations
-│   │   ├── production-places/  # Production place endpoints
-│   │   └── exports/       # Export generation
-│   └── ...                # Page components
-├── components/
-│   ├── ui/               # Reusable UI components
-│   ├── forms/            # Form components
-│   ├── maps/             # Map-related components
-│   └── error/            # Error boundary
+├── proxy.ts                # Edge auth middleware (Next.js 16 proxy convention)
+├── app/
+│   ├── page.tsx           # Public marketing landing page  (/)
+│   ├── login/ , signup/   # Authentication pages
+│   ├── thank-you/         # Supplier submission confirmation
+│   ├── supplier/[token]/  # Public supplier data-collection portal
+│   ├── dashboard/         # Authenticated app  (/dashboard, /dashboard/*)
+│   │   ├── page.tsx       # Dashboard overview
+│   │   ├── suppliers/     # Supplier management
+│   │   ├── exports/       # Export generation & history
+│   │   └── settings/      # Account settings
+│   └── api/
+│       ├── auth/          # login, register, refresh, me, logout
+│       ├── dashboard/     # aggregated dashboard stats
+│       ├── health/        # DB-checked health endpoint
+│       ├── suppliers/     # Supplier CRUD + bulk import
+│       ├── production-places/
+│       ├── portal/        # Supplier portal submit/complete
+│       └── exports/       # Export generation
+├── components/            # ui/ , forms/ , maps/ , error/
 ├── lib/
-│   ├── auth.ts           # Authentication utilities
-│   ├── prisma.ts         # Database client
-│   ├── eudr-validator.ts # GeoJSON validation
-│   ├── geojson.ts        # Export generation
-│   ├── email.ts          # Email utilities
-│   └── audit.ts          # Audit logging
-├── stores/               # Zustand state stores
-├── hooks/                # Custom React hooks
-├── types/                # TypeScript type definitions
-└── __tests__/            # Test files
+│   ├── auth.ts            # JWT, password, rate limiting, sessions
+│   ├── prisma.ts          # Database client (pg driver adapter)
+│   ├── eudr-validator.ts  # GeoJSON validation
+│   ├── geojson.ts         # Export generation
+│   ├── api-response.ts    # Standardised API envelope + correlation IDs
+│   ├── env-validation.ts  # Runtime env-var validation (Zod)
+│   ├── email.ts           # Transactional email (Resend)
+│   └── audit.ts           # Audit logging
+├── stores/  hooks/  types/
+└── __tests__/             # Unit tests (lib + API route handlers)
 ```
+
+## Routing & Authentication
+
+- `/` — public marketing landing page.
+- `/login`, `/signup` — authentication; on success the user is sent to `/dashboard`.
+- `/dashboard/*` — the authenticated application. Protected by `src/proxy.ts`,
+  which verifies the access-token cookie on the edge and 401s/redirects otherwise.
+- `/supplier/[token]` — public portal where invited suppliers submit production
+  locations; on completion they land on `/thank-you`.
+- Access tokens live 15 minutes; the dashboard transparently calls
+  `POST /api/auth/refresh` to mint a new one from the 7-day refresh-token cookie,
+  so sessions stay alive without forcing re-login.
 
 ## API Documentation
 
-### Authentication
+Authentication uses HttpOnly cookies (a 15-minute access token and a 7-day
+refresh token). Successful login/register set both cookies automatically.
 
 #### Register
 ```http
-POST /api/auth
+POST /api/auth/register
 Content-Type: application/json
 
 {
-  "mode": "register",
   "companyName": "Your Company",
   "email": "admin@company.com",
   "password": "SecureP@ss123!",
@@ -133,14 +153,31 @@ Content-Type: application/json
 
 #### Login
 ```http
-POST /api/auth
+POST /api/auth/login
 Content-Type: application/json
 
 {
-  "mode": "login",
   "email": "admin@company.com",
   "password": "SecureP@ss123!"
 }
+```
+
+#### Refresh session
+Exchanges the `refresh-token` cookie for a new access token (with rotation).
+```http
+POST /api/auth/refresh
+```
+
+#### Current user / Logout
+```http
+GET  /api/auth/me      # returns the authenticated client
+POST /api/auth/logout  # revokes refresh tokens and clears cookies
+```
+
+#### Health check
+Public endpoint for uptime monitoring; verifies the database connection.
+```http
+GET /api/health   # 200 { status: "ok" } or 503 when the DB is unreachable
 ```
 
 ### Suppliers

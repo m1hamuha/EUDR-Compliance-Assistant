@@ -64,7 +64,7 @@ export default function ExportsPage() {
       const response = await fetch('/api/exports')
       if (response.ok) {
         const data = await response.json()
-        setExports(data.exports)
+        setExports(data.exports ?? [])
       }
     } catch (error) {
       console.error('Failed to fetch exports:', error)
