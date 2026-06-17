@@ -11,10 +11,12 @@ import {
   AlertCircle,
   FileText,
   ArrowRight,
-  Loader2
+  Loader2,
+  Circle
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
+import { buildOnboarding } from '@/lib/onboarding'
 
 interface DashboardStats {
   totalSuppliers: number
@@ -70,6 +72,16 @@ export default function DashboardPage() {
   const completionRate = stats && stats.totalSuppliers > 0
     ? Math.round((stats.completedSuppliers / stats.totalSuppliers) * 100)
     : 0
+
+  const onboarding = stats
+    ? buildOnboarding({
+        totalSuppliers: stats.totalSuppliers,
+        totalPlaces: stats.totalPlaces,
+        completedSuppliers: stats.completedSuppliers,
+        hasExports: stats.recentExports.length > 0
+      })
+    : null
+  const nextStep = onboarding?.steps.find((s) => !s.done)
 
   return (
     <div className="space-y-6">
@@ -131,6 +143,56 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {stats && stats.totalSuppliers > 0 && onboarding && !onboarding.allDone && (
+        <Card className="border-emerald-200">
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <CardTitle>Get to your first EU-ready export</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {onboarding.completedCount} of {onboarding.totalCount} steps complete
+                </p>
+              </div>
+              {nextStep && (
+                <Link href={nextStep.href}>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700">
+                    {nextStep.cta}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+            <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-600 rounded-full transition-all"
+                style={{ width: `${onboarding.progress}%` }}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {onboarding.steps.map((step) => (
+                <li key={step.key} className="flex items-start gap-3">
+                  {step.done ? (
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-gray-300 shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <div className={step.done ? 'font-medium line-through text-muted-foreground' : 'font-medium'}>
+                      {step.label}
+                    </div>
+                    {!step.done && (
+                      <div className="text-sm text-muted-foreground">{step.description}</div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {stats && stats.totalSuppliers > 0 && (
         <Card>
