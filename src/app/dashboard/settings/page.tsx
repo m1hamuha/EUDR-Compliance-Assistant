@@ -86,7 +86,7 @@ export default function SettingsPage() {
           <CardDescription>Manage your subscription and billing</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg">
             <div>
               <div className="font-medium">
                 {user?.plan === 'TRIAL' ? 'Trial Plan' : 'Active Subscription'}

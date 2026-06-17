@@ -262,7 +262,7 @@ export default function ExportsPage() {
                           </span>
                         )}
                         {exportItem.validationReport.optimizations && (
-                          <span className="text-blue-600">
+                          <span className="text-emerald-600">
                             {exportItem.validationReport.optimizations.length} optimizations
                           </span>
                         )}

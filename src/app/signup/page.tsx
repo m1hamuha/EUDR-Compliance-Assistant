@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Coffee, Loader2 } from 'lucide-react'
+import { Leaf, Loader2 } from 'lucide-react'
 
 const signupSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
@@ -92,7 +92,9 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Coffee className="h-12 w-12 text-blue-600" />
+            <div className="h-14 w-14 rounded-2xl bg-emerald-600 flex items-center justify-center">
+              <Leaf className="h-7 w-7 text-white" />
+            </div>
           </div>
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>Start collecting EUDR compliance data from your suppliers</CardDescription>
@@ -173,7 +175,7 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-emerald-600 hover:underline">
               Sign in
             </Link>
           </div>

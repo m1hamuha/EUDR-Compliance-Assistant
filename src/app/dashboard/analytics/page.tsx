@@ -94,7 +94,7 @@ function KpiCard({ icon: Icon, label, value, sub }: { icon: React.ElementType; l
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{label}</span>
-          <Icon className="h-4 w-4 text-blue-600" />
+          <Icon className="h-4 w-4 text-emerald-600" />
         </div>
         <div className="mt-2 text-2xl font-bold">{value}</div>
         {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
@@ -106,7 +106,7 @@ function KpiCard({ icon: Icon, label, value, sub }: { icon: React.ElementType; l
 const FUNNEL_STAGES: Array<{ key: keyof Analytics['funnel']; label: string; color: string }> = [
   { key: 'invited', label: 'Invited', color: 'bg-gray-400' },
   { key: 'inProgress', label: 'In Progress', color: 'bg-amber-500' },
-  { key: 'completed', label: 'Completed', color: 'bg-blue-500' },
+  { key: 'completed', label: 'Completed', color: 'bg-sky-500' },
   { key: 'validated', label: 'Validated', color: 'bg-green-600' }
 ]
 
@@ -212,7 +212,7 @@ export default function AnalyticsPage() {
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-blue-600" />
+              <ShieldCheck className="h-5 w-5 text-emerald-600" />
               Compliance Readiness
             </CardTitle>
           </CardHeader>
@@ -282,7 +282,7 @@ export default function AnalyticsPage() {
               {data.weeklyCompletions.map((w) => (
                 <div key={w.weekStart} className="flex-1 flex flex-col items-center justify-end gap-1">
                   <div
-                    className="w-full bg-blue-500 rounded-t"
+                    className="w-full bg-emerald-500 rounded-t"
                     style={{ height: `${(w.count / trendMax) * 100}%`, minHeight: w.count > 0 ? 4 : 0, transition: 'height 0.6s ease' }}
                     title={`${w.count} completed`}
                   />

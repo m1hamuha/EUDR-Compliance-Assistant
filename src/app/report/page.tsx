@@ -88,7 +88,7 @@ export default function ComplianceReportPage() {
       <div className="max-w-3xl mx-auto bg-white shadow-sm print:shadow-none rounded-lg print:rounded-none p-10">
         <div className="flex items-center justify-between border-b pb-6 mb-6">
           <div className="flex items-center gap-3">
-            <ShieldCheck className="h-9 w-9 text-blue-600" />
+            <ShieldCheck className="h-9 w-9 text-emerald-600" />
             <div>
               <h1 className="text-2xl font-bold">EUDR Compliance Report</h1>
               <p className="text-sm text-muted-foreground">EU Deforestation Regulation — supply-chain readiness</p>
@@ -106,7 +106,7 @@ export default function ComplianceReportPage() {
           <>
             <div className="flex items-center gap-6 mb-8">
               <div className="text-center">
-                <div className="text-5xl font-bold text-blue-600">{analytics.complianceScore}</div>
+                <div className="text-5xl font-bold text-emerald-600">{analytics.complianceScore}</div>
                 <div className="text-xs text-muted-foreground">Readiness / 100</div>
               </div>
               <p className="text-sm text-muted-foreground">

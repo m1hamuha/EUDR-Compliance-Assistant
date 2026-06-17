@@ -14,7 +14,7 @@ import {
   LogOut,
   Menu,
   X,
-  Coffee,
+  Leaf,
   TrendingUp
 } from 'lucide-react'
 
@@ -71,7 +71,9 @@ export default function DashboardLayout({
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2 h-16 px-6 border-b">
-          <Coffee className="h-8 w-8 text-blue-600" />
+          <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <Leaf className="h-5 w-5 text-white" />
+          </div>
           <span className="font-semibold text-lg">EUDR Assistant</span>
           <Button
             variant="ghost"
@@ -94,7 +96,7 @@ export default function DashboardLayout({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   isActive 
-                    ? "bg-blue-50 text-blue-700" 
+                    ? "bg-emerald-50 text-emerald-700" 
                     : "text-gray-600 hover:bg-gray-100"
                 )}
                 onClick={() => setSidebarOpen(false)}
