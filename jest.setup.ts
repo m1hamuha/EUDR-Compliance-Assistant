@@ -43,10 +43,14 @@ jest.mock('bcryptjs', () => ({
   compare: jest.fn().mockResolvedValue(true),
 }))
 
+jest.mock('uuid', () => ({
+  v4: () => '00000000-0000-4000-8000-000000000000',
+}))
+
 jest.mock('@turf/turf', () => ({
   polygon: jest.fn().mockReturnValue({ geometry: { type: 'Polygon', coordinates: [] } }),
   centroid: jest.fn().mockReturnValue({ geometry: { type: 'Point', coordinates: [0, 0] } }),
-  simplify: jest.fn((poly, opts) => poly),
+  simplify: jest.fn((poly) => poly),
 }))
 
 jest.mock('@/lib/prisma', () => ({
@@ -61,6 +65,7 @@ jest.mock('@/lib/prisma', () => ({
     supplier: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -112,6 +117,22 @@ if (typeof TextEncoder === "undefined") {
       }
       return new Uint8Array(bytes)
     }
+  }
+}
+
+// jsdom's crypto implementation may lack randomUUID; polyfill it for tests.
+if (typeof globalThis.crypto === 'undefined') {
+  (globalThis as any).crypto = {}
+}
+if (typeof globalThis.crypto.randomUUID !== 'function') {
+  (globalThis.crypto as { randomUUID: () => string }).randomUUID = () =>
+    '00000000-0000-4000-8000-' + Math.random().toString(16).slice(2, 14).padEnd(12, '0')
+}
+if (typeof globalThis.crypto.getRandomValues !== 'function') {
+  (globalThis.crypto as { getRandomValues: <T extends ArrayBufferView | null>(a: T) => T }).getRandomValues = (arr) => {
+    const view = arr as unknown as Uint8Array
+    for (let i = 0; i < view.length; i++) view[i] = Math.floor(Math.random() * 256)
+    return arr
   }
 }
 

@@ -11,12 +11,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Coffee, Loader2 } from 'lucide-react'
+import { Leaf, Loader2 } from 'lucide-react'
 
 const signupSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(12, 'Password must be at least 12 characters')
+    .regex(/[A-Z]/, 'Include at least one uppercase letter')
+    .regex(/[a-z]/, 'Include at least one lowercase letter')
+    .regex(/[0-9]/, 'Include at least one number')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Include at least one special character'),
   country: z.string().length(2, 'Please select a country')
 })
 
@@ -68,11 +74,11 @@ export default function SignupPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        setError(result.error || 'Registration failed')
+        setError(result.error?.message || result.error || 'Registration failed')
         return
       }
 
-      router.push('/')
+      router.push('/dashboard')
       router.refresh()
     } catch {
       setError('An error occurred. Please try again.')
@@ -86,7 +92,9 @@ export default function SignupPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Coffee className="h-12 w-12 text-blue-600" />
+            <div className="h-14 w-14 rounded-2xl bg-emerald-600 flex items-center justify-center">
+              <Leaf className="h-7 w-7 text-white" />
+            </div>
           </div>
           <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>Start collecting EUDR compliance data from your suppliers</CardDescription>
@@ -129,7 +137,7 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 8 characters"
+                placeholder="At least 12 characters"
                 {...register('password')}
               />
               {errors.password && (
@@ -167,7 +175,7 @@ export default function SignupPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-emerald-600 hover:underline">
               Sign in
             </Link>
           </div>

@@ -4,22 +4,26 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { apiFetch } from '@/lib/api-client'
 import { Button } from '@/components/ui/button'
-import { 
-  LayoutDashboard, 
-  Users, 
-  FileDown, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Users,
+  FileDown,
+  Settings,
   LogOut,
   Menu,
   X,
-  Coffee
+  Leaf,
+  TrendingUp
 } from 'lucide-react'
+
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Suppliers', href: '/suppliers', icon: Users },
-  { name: 'Exports', href: '/exports', icon: FileDown },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Suppliers', href: '/dashboard/suppliers', icon: Users },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
+  { name: 'Exports', href: '/dashboard/exports', icon: FileDown },
+  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
 export default function DashboardLayout({
@@ -34,7 +38,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const getUser = async () => {
-      const response = await fetch('/api/auth/me')
+      // apiFetch silently refreshes an expired access token and retries.
+      const response = await apiFetch('/api/auth/me')
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
@@ -66,7 +71,9 @@ export default function DashboardLayout({
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2 h-16 px-6 border-b">
-          <Coffee className="h-8 w-8 text-blue-600" />
+          <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <Leaf className="h-5 w-5 text-white" />
+          </div>
           <span className="font-semibold text-lg">EUDR Assistant</span>
           <Button
             variant="ghost"
@@ -89,7 +96,7 @@ export default function DashboardLayout({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   isActive 
-                    ? "bg-blue-50 text-blue-700" 
+                    ? "bg-emerald-50 text-emerald-700" 
                     : "text-gray-600 hover:bg-gray-100"
                 )}
                 onClick={() => setSidebarOpen(false)}

@@ -30,6 +30,7 @@ import {
   AlertTriangle
 } from 'lucide-react'
 import { formatDate, formatBytes, COMMODITY_LABELS } from '@/lib/utils'
+import { apiFetch } from '@/lib/api-client'
 import type { Commodity } from '@prisma/client'
 
 interface Export {
@@ -61,10 +62,10 @@ export default function ExportsPage() {
   const fetchExports = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/exports')
+      const response = await apiFetch('/api/exports')
       if (response.ok) {
         const data = await response.json()
-        setExports(data.exports)
+        setExports(data.exports ?? [])
       }
     } catch (error) {
       console.error('Failed to fetch exports:', error)
@@ -92,7 +93,7 @@ export default function ExportsPage() {
         body.commodity = exportOptions.commodity
       }
 
-      const response = await fetch('/api/exports', {
+      const response = await apiFetch('/api/exports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -261,7 +262,7 @@ export default function ExportsPage() {
                           </span>
                         )}
                         {exportItem.validationReport.optimizations && (
-                          <span className="text-blue-600">
+                          <span className="text-emerald-600">
                             {exportItem.validationReport.optimizations.length} optimizations
                           </span>
                         )}

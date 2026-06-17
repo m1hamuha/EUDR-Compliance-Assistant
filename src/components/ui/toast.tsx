@@ -29,14 +29,14 @@ const TOAST_ICONS: Record<ToastType, ReactNode> = {
   success: <CheckCircle className="h-5 w-5 text-green-500" />,
   error: <AlertCircle className="h-5 w-5 text-red-500" />,
   warning: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
-  info: <Info className="h-5 w-5 text-blue-500" />
+  info: <Info className="h-5 w-5 text-emerald-500" />
 }
 
 const TOAST_STYLES: Record<ToastType, string> = {
   success: 'border-green-200 bg-green-50',
   error: 'border-red-200 bg-red-50',
   warning: 'border-yellow-200 bg-yellow-50',
-  info: 'border-blue-200 bg-blue-50'
+  info: 'border-emerald-200 bg-emerald-50'
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {

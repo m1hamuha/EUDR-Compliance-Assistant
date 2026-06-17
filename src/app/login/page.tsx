@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Coffee, Loader2 } from 'lucide-react'
+import { Leaf, Loader2 } from 'lucide-react'
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -46,11 +46,11 @@ export default function LoginPage() {
       const result = await response.json()
 
       if (!response.ok) {
-        setError(result.error || 'Login failed')
+        setError(result.error?.message || result.error || 'Login failed')
         return
       }
 
-      router.push('/')
+      router.push('/dashboard')
       router.refresh()
     } catch {
       setError('An error occurred. Please try again.')
@@ -64,7 +64,9 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Coffee className="h-12 w-12 text-blue-600" />
+            <div className="h-14 w-14 rounded-2xl bg-emerald-600 flex items-center justify-center">
+              <Leaf className="h-7 w-7 text-white" />
+            </div>
           </div>
           <CardTitle className="text-2xl">EUDR Compliance Assistant</CardTitle>
           <CardDescription>Sign in to manage your suppliers and exports</CardDescription>
@@ -111,7 +113,7 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Don&apos;t have an account? </span>
-            <Link href="/signup" className="text-blue-600 hover:underline">
+            <Link href="/signup" className="text-emerald-600 hover:underline">
               Sign up
             </Link>
           </div>

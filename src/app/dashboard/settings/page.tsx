@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2 } from 'lucide-react'
+import { apiFetch } from '@/lib/api-client'
 
 interface UserData {
   id: string
@@ -23,7 +24,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch('/api/auth/me')
+        const response = await apiFetch('/api/auth/me')
         if (response.ok) {
           const data = await response.json()
           setUser(data.user)
@@ -85,7 +86,7 @@ export default function SettingsPage() {
           <CardDescription>Manage your subscription and billing</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg">
             <div>
               <div className="font-medium">
                 {user?.plan === 'TRIAL' ? 'Trial Plan' : 'Active Subscription'}

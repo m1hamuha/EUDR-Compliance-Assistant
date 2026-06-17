@@ -1,19 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Users, 
-  CheckCircle2, 
-  AlertCircle, 
-  FileText, 
+import {
+  Users,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
   ArrowRight,
   Loader2
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
+import { apiFetch } from '@/lib/api-client'
 
 interface DashboardStats {
   totalSuppliers: number
@@ -32,29 +33,39 @@ interface DashboardStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [seeding, setSeeding] = useState(false)
+
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await apiFetch('/api/dashboard/stats')
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error)
+    }
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/suppliers?status=all')
-        if (response.ok) {
-          const data = await response.json()
-          setStats({
-            totalSuppliers: data.suppliers?.length || 0,
-            completedSuppliers: data.suppliers?.filter((s: { status: string }) => s.status === 'COMPLETED').length || 0,
-            inProgressSuppliers: data.suppliers?.filter((s: { status: string }) => s.status === 'IN_PROGRESS').length || 0,
-            totalPlaces: data.suppliers?.reduce((acc: number, s: { _count: { productionPlaces: number } }) => acc + s._count.productionPlaces, 0) || 0,
-            validationErrors: 0,
-            recentExports: []
-          })
-        }
-      } catch (error) {
-        console.error('Failed to fetch stats:', error)
-      }
-      setLoading(false)
-    }
     fetchStats()
-  }, [])
+  }, [fetchStats])
+
+  const handleLoadSampleData = async () => {
+    setSeeding(true)
+    try {
+      const response = await apiFetch('/api/demo/seed', { method: 'POST' })
+      if (response.ok) {
+        setLoading(true)
+        await fetchStats()
+      }
+    } catch (error) {
+      console.error('Failed to load sample data:', error)
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const completionRate = stats && stats.totalSuppliers > 0
     ? Math.round((stats.completedSuppliers / stats.totalSuppliers) * 100)
@@ -67,7 +78,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Overview of your EUDR compliance data collection</p>
         </div>
-        <Link href="/suppliers">
+        <Link href="/dashboard/suppliers">
           <Button>
             Manage Suppliers
             <ArrowRight className="h-4 w-4 ml-2" />
@@ -134,7 +145,7 @@ export default function DashboardPage() {
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-blue-600 rounded-full transition-all"
+                  className="h-full bg-emerald-600 rounded-full transition-all"
                   style={{ width: `${completionRate}%` }}
                 />
               </div>
@@ -184,7 +195,7 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
-            <Link href="/exports">
+            <Link href="/dashboard/exports">
               <Button variant="outline" className="w-full mt-4">
                 View All Exports
               </Button>
@@ -201,9 +212,15 @@ export default function DashboardPage() {
             <p className="text-muted-foreground text-center mb-4">
               Add your first supplier to begin collecting EUDR compliance data
             </p>
-            <Link href="/suppliers">
-              <Button>Add Supplier</Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/dashboard/suppliers">
+                <Button>Add Supplier</Button>
+              </Link>
+              <Button variant="outline" onClick={handleLoadSampleData} disabled={seeding}>
+                {seeding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Load sample data
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}

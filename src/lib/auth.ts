@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './prisma'
 import type { SubscriptionPlan } from '@prisma/client'
-import { addDays, addMinutes } from 'date-fns'
+import { addDays } from 'date-fns'
 
 const JWT_SECRET = (() => {
   const secret = process.env.AUTH_SECRET
@@ -102,7 +102,15 @@ export async function createAuthTokens(payload: Omit<JWTPayload, 'iat' | 'exp' |
 }
 
 async function createRefreshTokenWithStorage(payload: Omit<JWTPayload, 'iat' | 'exp' | 'type'>): Promise<string> {
-  const token = crypto.randomUUID()
+  // Refresh tokens are signed JWTs (verifiable via REFRESH_SECRET) AND tracked
+  // in the database so they can be revoked. A unique `jti` guarantees a distinct
+  // token string even when issued within the same second for the same client.
+  const token = await new SignJWT({ ...payload, type: 'refresh', jti: crypto.randomUUID() })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(TOKEN_EXPIRY.REFRESH)
+    .sign(REFRESH_TOKEN_SECRET)
+
   await prisma.refreshToken.create({
     data: {
       token,
@@ -225,6 +233,33 @@ export async function recordSuccessfulAttempt(email: string): Promise<void> {
 
 export async function clearLoginAttempts(email: string): Promise<void> {
   await prisma.loginAttempt.deleteMany({ where: { email } })
+}
+
+const ACCESS_COOKIE_MAX_AGE = 60 * 15 // 15 minutes
+const REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+
+export async function setSessionCookies(tokens: AuthTokens): Promise<void> {
+  const cookieStore = await cookies()
+  const isProd = process.env.NODE_ENV === 'production'
+
+  cookieStore.set('auth-token', tokens.accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: ACCESS_COOKIE_MAX_AGE
+  })
+  cookieStore.set('refresh-token', tokens.refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: REFRESH_COOKIE_MAX_AGE
+  })
+}
+
+export async function clearSessionCookies(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.delete('auth-token')
+  cookieStore.delete('refresh-token')
 }
 
 export async function getServerSession(): Promise<JWTPayload | null> {

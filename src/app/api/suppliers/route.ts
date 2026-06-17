@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireSession } from '@/lib/auth'
 import { z } from 'zod'
+import { addDays } from 'date-fns'
 import { generateToken } from '@/lib/utils'
+import { sendSupplierInvitation } from '@/lib/email'
 
 const supplierInviteSchema = z.object({
   name: z.string().min(1).max(255),
@@ -56,7 +58,7 @@ export async function GET(request: NextRequest) {
     ])
 
     return NextResponse.json({
-      data: suppliers,
+      suppliers,
       pagination: {
         page,
         limit,
@@ -104,6 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     const invitationToken = generateToken()
+    const hasEmail = Boolean(validatedData.contactEmail)
 
     const supplier = await prisma.supplier.create({
       data: {
@@ -114,9 +117,26 @@ export async function POST(request: NextRequest) {
         contactEmail: validatedData.contactEmail,
         contactPhone: validatedData.contactPhone,
         status: 'INVITED',
-        invitationToken
+        invitationToken,
+        invitationSentAt: hasEmail ? new Date() : null,
+        invitationExpiresAt: addDays(new Date(), 7)
       }
     })
+
+    // Best-effort invitation email — a delivery failure must not fail the
+    // supplier creation (the importer can re-send via the reminder endpoint).
+    if (hasEmail) {
+      try {
+        await sendSupplierInvitation({
+          email: validatedData.contactEmail!,
+          supplierName: supplier.name,
+          invitationToken,
+          companyName: client.companyName
+        })
+      } catch (emailError) {
+        console.error('Failed to send invitation email:', emailError)
+      }
+    }
 
     return NextResponse.json(supplier, { status: 201 })
   } catch (error) {
