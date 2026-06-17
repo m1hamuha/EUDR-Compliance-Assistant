@@ -43,6 +43,10 @@ jest.mock('bcryptjs', () => ({
   compare: jest.fn().mockResolvedValue(true),
 }))
 
+jest.mock('uuid', () => ({
+  v4: () => '00000000-0000-4000-8000-000000000000',
+}))
+
 jest.mock('@turf/turf', () => ({
   polygon: jest.fn().mockReturnValue({ geometry: { type: 'Polygon', coordinates: [] } }),
   centroid: jest.fn().mockReturnValue({ geometry: { type: 'Point', coordinates: [0, 0] } }),

@@ -16,7 +16,13 @@ import { Coffee, Loader2 } from 'lucide-react'
 const signupSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z
+    .string()
+    .min(12, 'Password must be at least 12 characters')
+    .regex(/[A-Z]/, 'Include at least one uppercase letter')
+    .regex(/[a-z]/, 'Include at least one lowercase letter')
+    .regex(/[0-9]/, 'Include at least one number')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'Include at least one special character'),
   country: z.string().length(2, 'Please select a country')
 })
 
@@ -129,7 +135,7 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 8 characters"
+                placeholder="At least 12 characters"
                 {...register('password')}
               />
               {errors.password && (

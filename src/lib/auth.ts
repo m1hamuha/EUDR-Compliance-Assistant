@@ -235,6 +235,33 @@ export async function clearLoginAttempts(email: string): Promise<void> {
   await prisma.loginAttempt.deleteMany({ where: { email } })
 }
 
+const ACCESS_COOKIE_MAX_AGE = 60 * 15 // 15 minutes
+const REFRESH_COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+
+export async function setSessionCookies(tokens: AuthTokens): Promise<void> {
+  const cookieStore = await cookies()
+  const isProd = process.env.NODE_ENV === 'production'
+
+  cookieStore.set('auth-token', tokens.accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: ACCESS_COOKIE_MAX_AGE
+  })
+  cookieStore.set('refresh-token', tokens.refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'lax',
+    maxAge: REFRESH_COOKIE_MAX_AGE
+  })
+}
+
+export async function clearSessionCookies(): Promise<void> {
+  const cookieStore = await cookies()
+  cookieStore.delete('auth-token')
+  cookieStore.delete('refresh-token')
+}
+
 export async function getServerSession(): Promise<JWTPayload | null> {
   const cookieStore = await cookies()
   const token = cookieStore.get('auth-token')?.value
