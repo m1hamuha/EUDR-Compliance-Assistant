@@ -40,6 +40,47 @@ interface Analytics {
     newThisPeriod: number
     newPrevPeriod: number
   }
+  scoreHistory: Array<{ date: string; score: number }>
+}
+
+function ScoreTrend({ history }: { history: Array<{ date: string; score: number }> }) {
+  if (history.length < 2) {
+    return (
+      <div className="flex items-center justify-center h-40 text-sm text-muted-foreground text-center px-4">
+        Your score is tracked daily — the trend will appear here over the next few days.
+      </div>
+    )
+  }
+  const w = 600
+  const h = 160
+  const pad = 8
+  const xs = history.map((_, i) => pad + (i / (history.length - 1)) * (w - 2 * pad))
+  const ys = history.map((p) => h - pad - (p.score / 100) * (h - 2 * pad))
+  const line = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')
+  const area = `${line} L${xs[xs.length - 1].toFixed(1)},${h - pad} L${xs[0].toFixed(1)},${h - pad} Z`
+  const last = history[history.length - 1].score
+  const first = history[0].score
+  const delta = last - first
+  return (
+    <div>
+      <div className="flex items-baseline gap-2 mb-2">
+        <span className="text-3xl font-bold text-emerald-700">{last}</span>
+        <span className={`text-sm font-medium ${delta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          {delta >= 0 ? '▲' : '▼'} {Math.abs(delta)} pts in {history.length} days
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-40" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={area} fill="url(#scoreFill)" />
+        <path d={line} fill="none" stroke="#059669" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+      </svg>
+    </div>
+  )
 }
 
 function DeltaBadge({ delta }: { delta: number | null }) {
@@ -236,6 +277,14 @@ export default function AnalyticsPage() {
           <KpiCard icon={ShieldCheck} label="Validation pass rate" value={`${data.validationPassRate}%`} sub={`${data.totalPlaces} production places`} />
         </div>
       </div>
+
+      {/* Score over time */}
+      <Card>
+        <CardHeader><CardTitle>Compliance score over time</CardTitle></CardHeader>
+        <CardContent>
+          <ScoreTrend history={data.scoreHistory} />
+        </CardContent>
+      </Card>
 
       {/* Funnel + trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

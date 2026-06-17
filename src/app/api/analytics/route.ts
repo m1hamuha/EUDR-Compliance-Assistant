@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { buildAnalytics } from '@/lib/analytics'
+import { buildAnalytics, shouldCreateSnapshot } from '@/lib/analytics'
 
 export async function GET() {
   try {
@@ -31,7 +31,41 @@ export async function GET() {
 
     const analytics = buildAnalytics(suppliers, places)
 
-    return NextResponse.json({ analytics })
+    // Lazily record at most one compliance snapshot per day so the score trend
+    // builds up over time without needing a scheduled job. Best-effort: never
+    // let snapshotting break the analytics response.
+    let scoreHistory: Array<{ date: string; score: number }> = []
+    try {
+      const latest = await prisma.complianceSnapshot.findFirst({
+        where: { clientId },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      if (shouldCreateSnapshot(latest?.createdAt ?? null)) {
+        await prisma.complianceSnapshot.create({
+          data: {
+            clientId,
+            score: analytics.complianceScore,
+            completionRate: analytics.completionRate,
+            validationPassRate: analytics.validationPassRate,
+            totalSuppliers: analytics.totalSuppliers,
+            totalPlaces: analytics.totalPlaces
+          }
+        })
+      }
+
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      const history = await prisma.complianceSnapshot.findMany({
+        where: { clientId, createdAt: { gte: thirtyDaysAgo } },
+        orderBy: { createdAt: 'asc' },
+        select: { score: true, createdAt: true }
+      })
+      scoreHistory = history.map((s) => ({ date: s.createdAt.toISOString().slice(0, 10), score: s.score }))
+    } catch (snapshotError) {
+      console.error('Snapshot/history error (non-fatal):', snapshotError)
+    }
+
+    return NextResponse.json({ analytics: { ...analytics, scoreHistory } })
   } catch (error) {
     console.error('Error building analytics:', error)
     return NextResponse.json(

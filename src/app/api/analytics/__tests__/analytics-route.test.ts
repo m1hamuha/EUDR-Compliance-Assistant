@@ -11,10 +11,14 @@ jest.mock('@/lib/auth', () => ({
 const mockPrisma = prisma as unknown as {
   supplier: { findMany: jest.Mock }
   productionPlace: { findMany: jest.Mock }
+  complianceSnapshot: { findFirst: jest.Mock; findMany: jest.Mock; create: jest.Mock }
 }
 
 beforeEach(() => {
   jest.clearAllMocks()
+  mockPrisma.complianceSnapshot.findFirst.mockResolvedValue(null)
+  mockPrisma.complianceSnapshot.create.mockResolvedValue({})
+  mockPrisma.complianceSnapshot.findMany.mockResolvedValue([])
 })
 
 describe('GET /api/analytics', () => {

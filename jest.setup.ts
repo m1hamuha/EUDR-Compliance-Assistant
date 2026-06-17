@@ -104,6 +104,11 @@ jest.mock('@/lib/prisma', () => ({
       deleteMany: jest.fn(),
       count: jest.fn(),
     },
+    complianceSnapshot: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
   },
 }))
 

@@ -73,8 +73,26 @@ model Client {
   suppliers     Supplier[]
   exports       GeoJSONExport[]
   auditLogs     AuditLog[]
+  snapshots     ComplianceSnapshot[]
 
   @@map("clients")
+}
+
+model ComplianceSnapshot {
+  id                 String   @id @default(cuid())
+  clientId           String
+  client             Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  score              Int
+  completionRate     Float
+  validationPassRate Float
+  totalSuppliers     Int
+  totalPlaces        Int
+
+  createdAt          DateTime @default(now())
+
+  @@index([clientId, createdAt])
+  @@map("compliance_snapshots")
 }
 
 model Supplier {
