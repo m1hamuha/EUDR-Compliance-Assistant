@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,7 +13,8 @@ import {
   Clock,
   ShieldCheck,
   AlertTriangle,
-  Send
+  Send,
+  FileText
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
 import { COMMODITY_LABELS } from '@/lib/utils'
@@ -192,9 +194,17 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground">Supply-chain compliance performance</p>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-3xl font-bold">Analytics</h1>
+          <p className="text-muted-foreground">Supply-chain compliance performance</p>
+        </div>
+        <Link href="/report">
+          <Button variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
+            Compliance report
+          </Button>
+        </Link>
       </div>
 
       {/* North-star score + KPIs */}
