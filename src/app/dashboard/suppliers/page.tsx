@@ -78,6 +78,7 @@ export default function SuppliersPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [commodityFilter, setCommodityFilter] = useState<string>('all')
+  const [riskFilter, setRiskFilter] = useState<string>('all')
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
   const [csvFile, setCsvFile] = useState<File | null>(null)
@@ -230,6 +231,13 @@ export default function SuppliersPage() {
       console.error('Failed to send reminder:', error)
     }
   }
+
+  // Risk is computed client-side from /api/risk, so the risk filter is applied
+  // to the already-fetched list rather than round-tripping to the server.
+  const visibleSuppliers =
+    riskFilter === 'all'
+      ? suppliers
+      : suppliers.filter((s) => riskBySupplier[s.id] === riskFilter)
 
   return (
     <div className="space-y-6">
@@ -419,6 +427,17 @@ export default function SuppliersPage() {
             <SelectItem value="SOY">Soy</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={riskFilter} onValueChange={setRiskFilter}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder={t('sup.filter.risk')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('sup.filter.allRisk')}</SelectItem>
+            <SelectItem value="high">{t('risk.level.high')}</SelectItem>
+            <SelectItem value="standard">{t('risk.level.standard')}</SelectItem>
+            <SelectItem value="negligible">{t('risk.level.negligible')}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -430,13 +449,13 @@ export default function SuppliersPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : suppliers.length === 0 ? (
+          ) : visibleSuppliers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {t('sup.empty')}
             </div>
           ) : (
             <div className="space-y-3">
-              {suppliers.map((supplier) => (
+              {visibleSuppliers.map((supplier) => (
                 <div
                   key={supplier.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
