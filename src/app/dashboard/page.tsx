@@ -216,13 +216,18 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {plan.tasks.slice(0, 3).map((task) => (
-                  <div key={task.id} className="flex items-center gap-3 rounded-lg border p-3">
+                  <Link
+                    key={task.id}
+                    href={`/dashboard/suppliers/${task.supplierId}`}
+                    className="flex items-center gap-3 rounded-lg border p-3 hover:bg-gray-50"
+                  >
                     <Badge variant={PRIORITY_VARIANT[task.priority]}>{t(`mit.priority.${task.priority}`)}</Badge>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="text-sm font-medium truncate">{t(task.titleKey)}</div>
                       <div className="text-xs text-muted-foreground truncate">{task.supplierName}</div>
                     </div>
-                  </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </Link>
                 ))}
               </div>
             )}
