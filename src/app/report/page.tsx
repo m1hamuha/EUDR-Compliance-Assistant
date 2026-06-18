@@ -110,8 +110,9 @@ export default function ComplianceReportPage() {
                 <div className="text-xs text-muted-foreground">Readiness / 100</div>
               </div>
               <p className="text-sm text-muted-foreground">
-                This score summarises how ready {user?.companyName ?? 'this organisation'}&apos;s supply chain is for
-                EUDR filing, weighting supplier completion (60%) and geolocation validation pass rate (40%).
+                This risk-adjusted score summarises how ready {user?.companyName ?? 'this organisation'}&apos;s supply
+                chain is for EUDR filing, blending data readiness (supplier completion and geolocation validation) with
+                the portfolio deforestation-risk index.
               </p>
             </div>
 

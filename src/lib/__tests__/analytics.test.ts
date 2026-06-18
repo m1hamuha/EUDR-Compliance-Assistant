@@ -64,6 +64,7 @@ describe('buildAnalytics', () => {
     it('computes the weighted compliance score', () => {
       // round(0.6*40 + 0.4*66.7) = round(50.68) = 51
       expect(r.complianceScore).toBe(51)
+      expect(r.riskIndex).toBe(0) // no risk index provided
     })
 
     it('computes average time-to-compliance in days', () => {
@@ -86,6 +87,33 @@ describe('buildAnalytics', () => {
       const total = r.weeklyCompletions.reduce((a, b) => a + b.count, 0)
       expect(total).toBe(2) // A (7d ago) and B (15d ago) both within 8 weeks
       expect(r.weeklyCompletions).toHaveLength(8)
+    })
+  })
+
+  describe('risk-weighted compliance score', () => {
+    const suppliers: AnalyticsSupplier[] = [
+      supplier({ id: 'A', status: 'VALIDATED', completedAt: ago(2) }),
+      supplier({ id: 'B', status: 'VALIDATED', completedAt: ago(2) })
+    ]
+    const places: AnalyticsPlace[] = [{ validationStatus: 'VALID' }, { validationStatus: 'VALID' }]
+
+    it('folds the risk index into the score when provided', () => {
+      // dataReadiness = 0.6*100 + 0.4*100 = 100
+      const clean = buildAnalytics(suppliers, places, { now: NOW, riskIndex: 0 })
+      const risky = buildAnalytics(suppliers, places, { now: NOW, riskIndex: 80 })
+      // clean: round(0.65*100 + 0.35*100) = 100
+      expect(clean.complianceScore).toBe(100)
+      // risky: round(0.65*100 + 0.35*20) = round(72) = 72
+      expect(risky.complianceScore).toBe(72)
+      expect(risky.riskIndex).toBe(80)
+      // a risky-but-complete chain scores strictly lower than a clean one
+      expect(risky.complianceScore).toBeLessThan(clean.complianceScore)
+    })
+
+    it('ignores the risk index when there are no plots', () => {
+      const r = buildAnalytics(suppliers, [], { now: NOW, riskIndex: 90 })
+      // falls back to data readiness only: round(0.6*100 + 0.4*0) = 60
+      expect(r.complianceScore).toBe(60)
     })
   })
 
