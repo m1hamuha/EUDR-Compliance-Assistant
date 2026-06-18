@@ -17,7 +17,8 @@ import {
   Leaf,
   TrendingUp,
   Map as MapIcon,
-  CreditCard
+  CreditCard,
+  History
 } from 'lucide-react'
 
 const navigation = [
@@ -26,6 +27,7 @@ const navigation = [
   { name: 'Map', href: '/dashboard/map', icon: MapIcon },
   { name: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
   { name: 'Exports', href: '/dashboard/exports', icon: FileDown },
+  { name: 'Activity', href: '/dashboard/activity', icon: History },
   { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
