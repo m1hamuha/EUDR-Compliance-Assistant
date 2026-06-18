@@ -31,23 +31,23 @@ interface AuditLog {
   createdAt: string
 }
 
-const ACTION_META: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  USER_LOGIN: { label: 'Signed in', icon: LogIn, color: 'text-slate-500' },
-  USER_LOGOUT: { label: 'Signed out', icon: LogIn, color: 'text-slate-500' },
-  USER_REGISTER: { label: 'Account created', icon: UserPlus, color: 'text-emerald-600' },
-  SUPPLIER_CREATE: { label: 'Supplier added', icon: Users, color: 'text-emerald-600' },
-  SUPPLIER_UPDATE: { label: 'Supplier updated', icon: Users, color: 'text-amber-600' },
-  SUPPLIER_DELETE: { label: 'Supplier deleted', icon: Trash2, color: 'text-red-600' },
-  SUPPLIER_INVITE: { label: 'Supplier invited', icon: UserPlus, color: 'text-emerald-600' },
-  PRODUCTION_PLACE_CREATE: { label: 'Production place added', icon: MapPin, color: 'text-emerald-600' },
-  PRODUCTION_PLACE_UPDATE: { label: 'Production place updated', icon: MapPin, color: 'text-amber-600' },
-  PRODUCTION_PLACE_DELETE: { label: 'Production place deleted', icon: Trash2, color: 'text-red-600' },
-  EXPORT_GENERATE: { label: 'Export generated', icon: FileDown, color: 'text-emerald-600' },
-  EXPORT_DOWNLOAD: { label: 'Export downloaded', icon: FileDown, color: 'text-slate-500' },
-  SETTINGS_UPDATE: { label: 'Settings updated', icon: SettingsIcon, color: 'text-amber-600' },
-  PASSWORD_CHANGE: { label: 'Password changed', icon: KeyRound, color: 'text-amber-600' },
-  PLAN_UPGRADE: { label: 'Plan changed', icon: CreditCard, color: 'text-emerald-600' },
-  DDS_RECORD: { label: 'Statement recorded', icon: FileCheck, color: 'text-emerald-600' }
+const ACTION_META: Record<string, { labelKey: string; icon: React.ElementType; color: string }> = {
+  USER_LOGIN: { labelKey: 'audit.USER_LOGIN', icon: LogIn, color: 'text-slate-500' },
+  USER_LOGOUT: { labelKey: 'audit.USER_LOGOUT', icon: LogIn, color: 'text-slate-500' },
+  USER_REGISTER: { labelKey: 'audit.USER_REGISTER', icon: UserPlus, color: 'text-emerald-600' },
+  SUPPLIER_CREATE: { labelKey: 'audit.SUPPLIER_CREATE', icon: Users, color: 'text-emerald-600' },
+  SUPPLIER_UPDATE: { labelKey: 'audit.SUPPLIER_UPDATE', icon: Users, color: 'text-amber-600' },
+  SUPPLIER_DELETE: { labelKey: 'audit.SUPPLIER_DELETE', icon: Trash2, color: 'text-red-600' },
+  SUPPLIER_INVITE: { labelKey: 'audit.SUPPLIER_INVITE', icon: UserPlus, color: 'text-emerald-600' },
+  PRODUCTION_PLACE_CREATE: { labelKey: 'audit.PRODUCTION_PLACE_CREATE', icon: MapPin, color: 'text-emerald-600' },
+  PRODUCTION_PLACE_UPDATE: { labelKey: 'audit.PRODUCTION_PLACE_UPDATE', icon: MapPin, color: 'text-amber-600' },
+  PRODUCTION_PLACE_DELETE: { labelKey: 'audit.PRODUCTION_PLACE_DELETE', icon: Trash2, color: 'text-red-600' },
+  EXPORT_GENERATE: { labelKey: 'audit.EXPORT_GENERATE', icon: FileDown, color: 'text-emerald-600' },
+  EXPORT_DOWNLOAD: { labelKey: 'audit.EXPORT_DOWNLOAD', icon: FileDown, color: 'text-slate-500' },
+  SETTINGS_UPDATE: { labelKey: 'audit.SETTINGS_UPDATE', icon: SettingsIcon, color: 'text-amber-600' },
+  PASSWORD_CHANGE: { labelKey: 'audit.PASSWORD_CHANGE', icon: KeyRound, color: 'text-amber-600' },
+  PLAN_UPGRADE: { labelKey: 'audit.PLAN_UPGRADE', icon: CreditCard, color: 'text-emerald-600' },
+  DDS_RECORD: { labelKey: 'audit.DDS_RECORD', icon: FileCheck, color: 'text-emerald-600' }
 }
 
 function describe(log: AuditLog): string {
@@ -103,15 +103,17 @@ export default function ActivityPage() {
           ) : (
             <ol className="relative border-l border-slate-200 ml-3">
               {logs.map((log) => {
-                const meta = ACTION_META[log.action] ?? { label: log.action, icon: History, color: 'text-slate-500' }
-                const Icon = meta.icon
+                const meta = ACTION_META[log.action]
+                const Icon = meta?.icon ?? History
+                const color = meta?.color ?? 'text-slate-500'
+                const label = meta ? t(meta.labelKey) : log.action
                 return (
                   <li key={log.id} className="mb-6 ml-6">
                     <span className="absolute -left-3 flex h-6 w-6 items-center justify-center rounded-full bg-white border border-slate-200">
-                      <Icon className={`h-3.5 w-3.5 ${meta.color}`} />
+                      <Icon className={`h-3.5 w-3.5 ${color}`} />
                     </span>
                     <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="font-medium">{meta.label}</div>
+                      <div className="font-medium">{label}</div>
                       <time className="text-xs text-muted-foreground">{formatDateTime(log.createdAt)}</time>
                     </div>
                     <div className="text-sm text-muted-foreground">
