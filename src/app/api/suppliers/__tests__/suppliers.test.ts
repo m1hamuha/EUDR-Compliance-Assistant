@@ -19,6 +19,7 @@ const mockEmail = sendSupplierInvitation as jest.Mock
 const mockPrisma = prisma as unknown as {
   client: { findUnique: jest.Mock }
   supplier: { findFirst: jest.Mock; create: jest.Mock; update: jest.Mock; count: jest.Mock }
+  auditLog: { create: jest.Mock }
 }
 
 function jsonRequest(body: unknown): NextRequest {
@@ -49,6 +50,8 @@ describe('POST /api/suppliers (invitation)', () => {
     const createArg = mockPrisma.supplier.create.mock.calls[0][0]
     expect(createArg.data.invitationSentAt).toBeInstanceOf(Date)
     expect(createArg.data.invitationExpiresAt).toBeInstanceOf(Date)
+    // a SUPPLIER_CREATE audit log is written
+    expect(mockPrisma.auditLog.create).toHaveBeenCalled()
   })
 
   it('does not send an email when no contact email is provided', async () => {

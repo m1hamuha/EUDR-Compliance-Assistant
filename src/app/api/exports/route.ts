@@ -3,6 +3,7 @@ import { requireSession } from '@/lib/auth'
 import { generateExport } from '@/lib/geojson'
 import { prisma } from '@/lib/prisma'
 import { canExport, getPlan } from '@/lib/plans'
+import { createAuditLog } from '@/lib/audit'
 import { z } from 'zod'
 
 const exportSchema = z.object({
@@ -87,6 +88,10 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await generateExport(session.sub, validatedData)
+
+    await createAuditLog('EXPORT_GENERATE', 'GeoJSONExport', result.downloadUrl ?? 'export', {
+      clientId: session.sub
+    }, { fileSize: result.fileSize, commodity: validatedData.commodity })
 
     return NextResponse.json(result)
   } catch (error) {

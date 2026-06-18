@@ -6,6 +6,7 @@ import { addDays } from 'date-fns'
 import { generateToken } from '@/lib/utils'
 import { sendSupplierInvitation } from '@/lib/email'
 import { canAddSuppliers, getPlan } from '@/lib/plans'
+import { createAuditLog } from '@/lib/audit'
 
 const supplierInviteSchema = z.object({
   name: z.string().min(1).max(255),
@@ -130,6 +131,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    await createAuditLog('SUPPLIER_CREATE', 'Supplier', supplier.id, {
+      clientId: session.sub,
+      userEmail: client.email
+    }, { name: supplier.name, commodity: supplier.commodity })
+
     // Best-effort invitation email — a delivery failure must not fail the
     // supplier creation (the importer can re-send via the reminder endpoint).
     if (hasEmail) {
@@ -239,6 +245,10 @@ export async function DELETE(request: NextRequest) {
     await prisma.supplier.delete({
       where: { id }
     })
+
+    await createAuditLog('SUPPLIER_DELETE', 'Supplier', id, {
+      clientId: session.sub
+    }, { name: supplier.name })
 
     return NextResponse.json({ success: true })
   } catch (error) {
