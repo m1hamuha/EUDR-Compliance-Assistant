@@ -19,7 +19,8 @@ import {
   TrendingUp,
   Map as MapIcon,
   CreditCard,
-  History
+  History,
+  ShieldAlert
 } from 'lucide-react'
 
 const navigation = [
@@ -27,6 +28,7 @@ const navigation = [
   { key: 'nav.suppliers', href: '/dashboard/suppliers', icon: Users },
   { key: 'nav.map', href: '/dashboard/map', icon: MapIcon },
   { key: 'nav.analytics', href: '/dashboard/analytics', icon: TrendingUp },
+  { key: 'nav.risk', href: '/dashboard/risk', icon: ShieldAlert },
   { key: 'nav.exports', href: '/dashboard/exports', icon: FileDown },
   { key: 'nav.activity', href: '/dashboard/activity', icon: History },
   { key: 'nav.billing', href: '/dashboard/billing', icon: CreditCard },

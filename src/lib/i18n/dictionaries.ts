@@ -295,7 +295,49 @@ const en: Dict = {
   'exp.valid': '{n} valid',
   'exp.errors': '{n} errors',
   'exp.optimizations': '{n} optimizations',
-  'exp.download': 'Download'
+  'exp.download': 'Download',
+
+  // nav
+  'nav.risk': 'Risk',
+
+  // risk assessment
+  'risk.title': 'Risk Assessment',
+  'risk.subtitle': 'Deforestation-risk due diligence across your supply chain',
+  'risk.empty.title': 'No risk data yet',
+  'risk.empty.sub': 'Add suppliers and collect their geolocation to run an EUDR risk assessment.',
+  'risk.conclusion.ready.title': 'Ready to file',
+  'risk.conclusion.ready.sub': 'Every supplier reaches a negligible-risk conclusion. You can submit your Due Diligence Statement.',
+  'risk.conclusion.due_diligence.title': 'Due diligence in progress',
+  'risk.conclusion.due_diligence.sub': 'Standard due diligence applies to some suppliers. Complete the checks before filing.',
+  'risk.conclusion.action_required.title': 'Action required',
+  'risk.conclusion.action_required.sub': '{n} plot(s) carry high deforestation risk and require mitigation before market placement.',
+  'risk.index': 'Portfolio risk index',
+  'risk.index.sub': '0 = negligible · 100 = maximum',
+  'risk.mitigation': 'Plots needing mitigation',
+  'risk.plots': 'Plots assessed',
+  'risk.suppliersCount': 'Suppliers assessed',
+  'risk.distribution': 'Risk conclusions',
+  'risk.level.negligible': 'Negligible',
+  'risk.level.standard': 'Standard',
+  'risk.level.high': 'High',
+  'risk.benchmark': 'EU country benchmark',
+  'risk.benchmark.low': 'Low risk',
+  'risk.benchmark.standard': 'Standard risk',
+  'risk.benchmark.high': 'High risk',
+  'risk.benchmark.note': 'Country categories per the EU benchmarking system. Low-risk origins qualify for simplified due diligence.',
+  'risk.bySupplier': 'Risk by supplier',
+  'risk.col.plots': '{n} plots',
+  'risk.noPlots': 'No plots submitted',
+  'risk.factors': 'Key factors',
+  'risk.factor.countryHigh': 'Sourced from a country benchmarked as high-risk under the EUDR',
+  'risk.factor.countryStandard': 'Standard-risk country under the EU benchmark — full due diligence applies',
+  'risk.factor.countryLow': 'Low-risk country under the EU benchmark — simplified due diligence available',
+  'risk.factor.commodityPressure': 'High deforestation-pressure commodity',
+  'risk.factor.geoInvalid': 'Geolocation failed EUDR validation — the plot cannot be verified',
+  'risk.factor.geoPending': 'Geolocation has not yet passed EUDR validation',
+  'risk.factor.geoValid': 'Geolocation passed EUDR validation',
+  'risk.factor.largePoint': 'Plot over 4 ha submitted as a point — geolocation is not precise enough',
+  'risk.factor.areaMissing': 'Plot area is missing'
 }
 
 const de: Dict = {
@@ -584,7 +626,49 @@ const de: Dict = {
   'exp.valid': '{n} gültig',
   'exp.errors': '{n} Fehler',
   'exp.optimizations': '{n} Optimierungen',
-  'exp.download': 'Herunterladen'
+  'exp.download': 'Herunterladen',
+
+  // nav
+  'nav.risk': 'Risiko',
+
+  // risk assessment
+  'risk.title': 'Risikobewertung',
+  'risk.subtitle': 'Sorgfaltspflicht zum Entwaldungsrisiko in Ihrer Lieferkette',
+  'risk.empty.title': 'Noch keine Risikodaten',
+  'risk.empty.sub': 'Fügen Sie Lieferanten hinzu und erfassen Sie deren Geolokalisierung, um eine EUDR-Risikobewertung durchzuführen.',
+  'risk.conclusion.ready.title': 'Bereit zur Einreichung',
+  'risk.conclusion.ready.sub': 'Jeder Lieferant erreicht ein vernachlässigbares Risiko. Sie können Ihre Sorgfaltspflichterklärung einreichen.',
+  'risk.conclusion.due_diligence.title': 'Sorgfaltsprüfung läuft',
+  'risk.conclusion.due_diligence.sub': 'Für einige Lieferanten gilt die Standard-Sorgfaltspflicht. Schließen Sie die Prüfungen vor der Einreichung ab.',
+  'risk.conclusion.action_required.title': 'Handlungsbedarf',
+  'risk.conclusion.action_required.sub': '{n} Fläche(n) tragen ein hohes Entwaldungsrisiko und erfordern Minderungsmaßnahmen vor dem Inverkehrbringen.',
+  'risk.index': 'Portfolio-Risikoindex',
+  'risk.index.sub': '0 = vernachlässigbar · 100 = maximal',
+  'risk.mitigation': 'Flächen mit Minderungsbedarf',
+  'risk.plots': 'Bewertete Flächen',
+  'risk.suppliersCount': 'Bewertete Lieferanten',
+  'risk.distribution': 'Risikoschlussfolgerungen',
+  'risk.level.negligible': 'Vernachlässigbar',
+  'risk.level.standard': 'Standard',
+  'risk.level.high': 'Hoch',
+  'risk.benchmark': 'EU-Länder-Benchmark',
+  'risk.benchmark.low': 'Geringes Risiko',
+  'risk.benchmark.standard': 'Standardrisiko',
+  'risk.benchmark.high': 'Hohes Risiko',
+  'risk.benchmark.note': 'Länderkategorien gemäß dem EU-Benchmarking-System. Herkünfte mit geringem Risiko qualifizieren sich für eine vereinfachte Sorgfaltspflicht.',
+  'risk.bySupplier': 'Risiko nach Lieferant',
+  'risk.col.plots': '{n} Flächen',
+  'risk.noPlots': 'Keine Flächen übermittelt',
+  'risk.factors': 'Wesentliche Faktoren',
+  'risk.factor.countryHigh': 'Bezug aus einem Land mit hohem Risiko gemäß EUDR-Benchmark',
+  'risk.factor.countryStandard': 'Land mit Standardrisiko gemäß EU-Benchmark — volle Sorgfaltspflicht gilt',
+  'risk.factor.countryLow': 'Land mit geringem Risiko gemäß EU-Benchmark — vereinfachte Sorgfaltspflicht möglich',
+  'risk.factor.commodityPressure': 'Rohstoff mit hohem Entwaldungsdruck',
+  'risk.factor.geoInvalid': 'Geolokalisierung hat die EUDR-Validierung nicht bestanden — die Fläche kann nicht verifiziert werden',
+  'risk.factor.geoPending': 'Geolokalisierung hat die EUDR-Validierung noch nicht bestanden',
+  'risk.factor.geoValid': 'Geolokalisierung hat die EUDR-Validierung bestanden',
+  'risk.factor.largePoint': 'Fläche über 4 ha als Punkt übermittelt — Geolokalisierung nicht präzise genug',
+  'risk.factor.areaMissing': 'Flächengröße fehlt'
 }
 
 export const dictionaries: Record<Locale, Dict> = { en, de }
