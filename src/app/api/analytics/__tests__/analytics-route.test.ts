@@ -10,7 +10,6 @@ jest.mock('@/lib/auth', () => ({
 
 const mockPrisma = prisma as unknown as {
   supplier: { findMany: jest.Mock }
-  productionPlace: { findMany: jest.Mock }
   complianceSnapshot: { findFirst: jest.Mock; findMany: jest.Mock; create: jest.Mock }
 }
 
@@ -24,9 +23,14 @@ beforeEach(() => {
 describe('GET /api/analytics', () => {
   it('returns a computed analytics payload scoped to the client', async () => {
     mockPrisma.supplier.findMany.mockResolvedValue([
-      { id: 'A', name: 'A', status: 'VALIDATED', commodity: 'COFFEE', country: 'BR', contactEmail: 'a@x.com', invitationSentAt: new Date(), completedAt: new Date(), createdAt: new Date() }
+      {
+        id: 'A', name: 'A', status: 'VALIDATED', commodity: 'COFFEE', country: 'BR',
+        contactEmail: 'a@x.com', invitationSentAt: new Date(), completedAt: new Date(), createdAt: new Date(),
+        productionPlaces: [
+          { id: 'p1', name: 'Plot', country: 'BR', areaHectares: 2, geometryType: 'POLYGON', validationStatus: 'VALID' }
+        ]
+      }
     ])
-    mockPrisma.productionPlace.findMany.mockResolvedValue([{ validationStatus: 'VALID' }])
 
     const res = await GET()
     const json = await res.json()
@@ -35,6 +39,8 @@ describe('GET /api/analytics', () => {
     expect(json.analytics.totalSuppliers).toBe(1)
     expect(json.analytics.funnel.validated).toBe(1)
     expect(json.analytics.validationPassRate).toBe(100)
+    // Risk is folded into the score (standard-risk coffee plot), and exposed.
+    expect(json.analytics.riskIndex).toBeGreaterThan(0)
     expect(mockPrisma.supplier.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { clientId: 'client-1' } })
     )
@@ -42,7 +48,6 @@ describe('GET /api/analytics', () => {
 
   it('returns 500 when the query fails', async () => {
     mockPrisma.supplier.findMany.mockRejectedValue(new Error('db down'))
-    mockPrisma.productionPlace.findMany.mockResolvedValue([])
     const res = await GET()
     expect(res.status).toBe(500)
   })

@@ -31,6 +31,8 @@ export interface AnalyticsResult {
   totalPlaces: number
   /** Single north-star metric (0-100): supply-chain readiness for EUDR filing. */
   complianceScore: number
+  /** 0-100 portfolio deforestation-risk index folded into the score (0 = none). */
+  riskIndex: number
   funnel: {
     invited: number
     inProgress: number
@@ -67,6 +69,9 @@ export interface AnalyticsResult {
 const COMPLETED_STATUSES: SupplierStatus[] = ['COMPLETED', 'VALIDATED']
 const SCORE_COMPLETION_WEIGHT = 0.6
 const SCORE_VALIDATION_WEIGHT = 0.4
+// When risk is known, the score blends data readiness with risk cleanliness.
+const SCORE_RISK_DATA_WEIGHT = 0.65
+const SCORE_RISK_WEIGHT = 0.35
 
 function pct(part: number, whole: number): number {
   if (whole <= 0) return 0
@@ -76,7 +81,18 @@ function pct(part: number, whole: number): number {
 export function buildAnalytics(
   suppliers: AnalyticsSupplier[],
   places: AnalyticsPlace[],
-  options: { now?: Date; atRiskAfterDays?: number; weeks?: number; periodDays?: number } = {}
+  options: {
+    now?: Date
+    atRiskAfterDays?: number
+    weeks?: number
+    periodDays?: number
+    /**
+     * Portfolio deforestation-risk index (0-100, higher = riskier). When
+     * provided and there are plots, it is folded into the compliance score so
+     * a complete-but-risky supply chain is not rated "ready".
+     */
+    riskIndex?: number
+  } = {}
 ): AnalyticsResult {
   const now = options.now ?? new Date()
   const atRiskAfterDays = options.atRiskAfterDays ?? 5
@@ -109,9 +125,14 @@ export function buildAnalytics(
   const completionRate = pct(completed, totalSuppliers)
   const validationPassRate = pct(validPlaces, totalPlaces)
 
-  const complianceScore = Math.round(
-    SCORE_COMPLETION_WEIGHT * completionRate + SCORE_VALIDATION_WEIGHT * validationPassRate
-  )
+  // Data readiness: how complete and valid the collected geolocation is.
+  const dataReadiness = SCORE_COMPLETION_WEIGHT * completionRate + SCORE_VALIDATION_WEIGHT * validationPassRate
+  // Fold in deforestation risk when available: a complete supply chain that is
+  // still high-risk is not ready to file. `100 - riskIndex` is risk cleanliness.
+  const complianceScore =
+    options.riskIndex !== undefined && totalPlaces > 0
+      ? Math.round(SCORE_RISK_DATA_WEIGHT * dataReadiness + SCORE_RISK_WEIGHT * (100 - options.riskIndex))
+      : Math.round(dataReadiness)
 
   // Average time-to-compliance across suppliers that completed and have a
   // recorded invitation timestamp.
@@ -157,6 +178,7 @@ export function buildAnalytics(
     totalSuppliers,
     totalPlaces,
     complianceScore,
+    riskIndex: options.riskIndex ?? 0,
     funnel,
     responseRate,
     completionRate,
