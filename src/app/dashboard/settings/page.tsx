@@ -2,10 +2,20 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog'
 import { Loader2 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
 
@@ -19,9 +29,64 @@ interface UserData {
 }
 
 export default function SettingsPage() {
+  const router = useRouter()
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
+
+  // Change password
+  const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwMessage, setPwMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null)
+
+  // Delete account
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleting, setDeleting] = useState(false)
+
+  const handleChangePassword = async () => {
+    setPwMessage(null)
+    if (pw.next !== pw.confirm) {
+      setPwMessage({ type: 'error', text: 'New passwords do not match.' })
+      return
+    }
+    setPwSaving(true)
+    try {
+      const res = await apiFetch('/api/account/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pw.current, newPassword: pw.next })
+      })
+      const data = await res.json().catch(() => null)
+      if (res.ok) {
+        setPwMessage({ type: 'success', text: 'Password changed. Other sessions have been signed out.' })
+        setPw({ current: '', next: '', confirm: '' })
+      } else {
+        const detail = data?.error?.details?.[0]
+        setPwMessage({ type: 'error', text: detail ?? data?.error?.message ?? 'Could not change password.' })
+      }
+    } catch {
+      setPwMessage({ type: 'error', text: 'Could not change password.' })
+    } finally {
+      setPwSaving(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true)
+    try {
+      const res = await apiFetch('/api/account', { method: 'DELETE' })
+      if (res.ok) {
+        router.push('/')
+      } else {
+        alert('Could not delete account. Please try again.')
+      }
+    } catch {
+      alert('Could not delete account. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const handleExportData = async () => {
     setExporting(true)
@@ -132,6 +197,38 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Security</CardTitle>
+          <CardDescription>Change your password</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {pwMessage && (
+            <div className={`rounded-lg px-3 py-2 text-sm ${pwMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700'}`}>
+              {pwMessage.text}
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Current password</Label>
+              <Input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>New password</Label>
+              <Input type="password" placeholder="At least 12 characters" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Confirm new password</Label>
+              <Input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
+            </div>
+          </div>
+          <Button onClick={handleChangePassword} disabled={pwSaving || !pw.current || !pw.next}>
+            {pwSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Change password
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Data & Privacy</CardTitle>
           <CardDescription>Manage your data and privacy settings</CardDescription>
         </CardHeader>
@@ -155,7 +252,32 @@ export default function SettingsPage() {
                 Permanently delete your account and all data
               </div>
             </div>
-            <Button variant="destructive">Delete</Button>
+            <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); setDeleteConfirm('') }}>
+              <DialogTrigger asChild>
+                <Button variant="destructive">Delete</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete account?</DialogTitle>
+                  <DialogDescription>
+                    This permanently deletes your account and all suppliers, production places,
+                    exports, and history. This cannot be undone. Type <strong>DELETE</strong> to confirm.
+                  </DialogDescription>
+                </DialogHeader>
+                <Input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="DELETE" />
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirm !== 'DELETE' || deleting}
+                  >
+                    {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Delete my account
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardContent>
       </Card>
