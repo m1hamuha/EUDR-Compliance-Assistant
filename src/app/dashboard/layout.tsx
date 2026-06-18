@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n, LanguageSwitcher } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {
   LayoutDashboard,
@@ -22,14 +23,14 @@ import {
 } from 'lucide-react'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Suppliers', href: '/dashboard/suppliers', icon: Users },
-  { name: 'Map', href: '/dashboard/map', icon: MapIcon },
-  { name: 'Analytics', href: '/dashboard/analytics', icon: TrendingUp },
-  { name: 'Exports', href: '/dashboard/exports', icon: FileDown },
-  { name: 'Activity', href: '/dashboard/activity', icon: History },
-  { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  { key: 'nav.dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { key: 'nav.suppliers', href: '/dashboard/suppliers', icon: Users },
+  { key: 'nav.map', href: '/dashboard/map', icon: MapIcon },
+  { key: 'nav.analytics', href: '/dashboard/analytics', icon: TrendingUp },
+  { key: 'nav.exports', href: '/dashboard/exports', icon: FileDown },
+  { key: 'nav.activity', href: '/dashboard/activity', icon: History },
+  { key: 'nav.billing', href: '/dashboard/billing', icon: CreditCard },
+  { key: 'nav.settings', href: '/dashboard/settings', icon: Settings },
 ]
 
 export default function DashboardLayout({
@@ -39,6 +40,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { t } = useI18n()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<{ email: string; companyName: string } | null>(null)
 
@@ -97,24 +99,27 @@ export default function DashboardLayout({
             const isActive = pathname === item.href
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                  isActive 
-                    ? "bg-emerald-50 text-emerald-700" 
+                  isActive
+                    ? "bg-emerald-50 text-emerald-700"
                     : "text-gray-600 hover:bg-gray-100"
                 )}
                 onClick={() => setSidebarOpen(false)}
               >
                 <Icon className="h-5 w-5" />
-                {item.name}
+                {t(item.key)}
               </Link>
             )
           })}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
+          <div className="mb-3 flex justify-center">
+            <LanguageSwitcher />
+          </div>
           {user && (
             <div className="mb-2 px-3">
               <p className="text-sm font-medium truncate">{user.companyName}</p>
@@ -127,7 +132,7 @@ export default function DashboardLayout({
             onClick={handleLogout}
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Sign out
+            {t('common.signOut')}
           </Button>
         </div>
       </aside>
