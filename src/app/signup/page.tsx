@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Leaf, Loader2 } from 'lucide-react'
+import { useI18n, LanguageSwitcher } from '@/lib/i18n'
 
 const signupSchema = z.object({
   companyName: z.string().min(2, 'Company name must be at least 2 characters'),
@@ -47,6 +48,7 @@ const countries = [
 
 export default function SignupPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -91,13 +93,16 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-end">
+            <LanguageSwitcher />
+          </div>
           <div className="flex justify-center mb-4">
             <div className="h-14 w-14 rounded-2xl bg-emerald-600 flex items-center justify-center">
               <Leaf className="h-7 w-7 text-white" />
             </div>
           </div>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
-          <CardDescription>Start collecting EUDR compliance data from your suppliers</CardDescription>
+          <CardTitle className="text-2xl">{t('auth.signup.title')}</CardTitle>
+          <CardDescription>{t('auth.signup.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -108,7 +113,7 @@ export default function SignupPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="companyName">Company Name</Label>
+              <Label htmlFor="companyName">{t('auth.companyName')}</Label>
               <Input
                 id="companyName"
                 placeholder="Your company name"
@@ -120,7 +125,7 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('auth.email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -133,11 +138,11 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('auth.password')}</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="At least 12 characters"
+                placeholder={t('auth.passwordMin')}
                 {...register('password')}
               />
               {errors.password && (
@@ -146,7 +151,7 @@ export default function SignupPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Country</Label>
+              <Label>{t('auth.country')}</Label>
               <Select
                 value={watch('country')}
                 onValueChange={(value) => setValue('country', value)}
@@ -169,14 +174,14 @@ export default function SignupPage() {
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Create account
+              {t('auth.signup.button')}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Already have an account? </span>
+            <span className="text-muted-foreground">{t('auth.signup.haveAccount')} </span>
             <Link href="/login" className="text-emerald-600 hover:underline">
-              Sign in
+              {t('common.signIn')}
             </Link>
           </div>
         </CardContent>

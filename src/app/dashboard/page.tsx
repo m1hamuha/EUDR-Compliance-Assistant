@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n } from '@/lib/i18n'
 import { buildOnboarding } from '@/lib/onboarding'
 
 interface DashboardStats {
@@ -33,6 +34,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
+  const { t } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
@@ -87,12 +89,12 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your EUDR compliance data collection</p>
+          <h1 className="text-3xl font-bold">{t('dash.title')}</h1>
+          <p className="text-muted-foreground">{t('dash.subtitle')}</p>
         </div>
         <Link href="/dashboard/suppliers">
           <Button>
-            Manage Suppliers
+            {t('dash.manageSuppliers')}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </Link>
@@ -101,45 +103,45 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Suppliers</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dash.totalSuppliers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? '...' : stats?.totalSuppliers || 0}</div>
-            <p className="text-xs text-muted-foreground">Invited suppliers</p>
+            <p className="text-xs text-muted-foreground">{t('dash.invitedSuppliers')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dash.completed')}</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? '...' : stats?.completedSuppliers || 0}</div>
-            <p className="text-xs text-muted-foreground">Data submitted</p>
+            <p className="text-xs text-muted-foreground">{t('dash.dataSubmitted')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dash.inProgress')}</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? '...' : stats?.inProgressSuppliers || 0}</div>
-            <p className="text-xs text-muted-foreground">Awaiting data</p>
+            <p className="text-xs text-muted-foreground">{t('dash.awaitingData')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Production Places</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('dash.productionPlaces')}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{loading ? '...' : stats?.totalPlaces || 0}</div>
-            <p className="text-xs text-muted-foreground">Total plots collected</p>
+            <p className="text-xs text-muted-foreground">{t('dash.totalPlots')}</p>
           </CardContent>
         </Card>
       </div>
@@ -149,9 +151,9 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div>
-                <CardTitle>Get to your first EU-ready export</CardTitle>
+                <CardTitle>{t('dash.onboarding.title')}</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {onboarding.completedCount} of {onboarding.totalCount} steps complete
+                  {t('dash.onboarding.steps', { done: onboarding.completedCount, total: onboarding.totalCount })}
                 </p>
               </div>
               {nextStep && (
@@ -197,12 +199,12 @@ export default function DashboardPage() {
       {stats && stats.totalSuppliers > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Data Collection Progress</CardTitle>
+            <CardTitle>{t('dash.progress.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span>Overall completion</span>
+                <span>{t('dash.progress.overall')}</span>
                 <span className="font-medium">{completionRate}%</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -214,15 +216,15 @@ export default function DashboardPage() {
               <div className="grid grid-cols-3 gap-4 text-center text-sm">
                 <div>
                   <div className="font-medium">{stats.completedSuppliers}</div>
-                  <div className="text-muted-foreground">Completed</div>
+                  <div className="text-muted-foreground">{t('dash.completed')}</div>
                 </div>
                 <div>
                   <div className="font-medium">{stats.inProgressSuppliers}</div>
-                  <div className="text-muted-foreground">In Progress</div>
+                  <div className="text-muted-foreground">{t('dash.inProgress')}</div>
                 </div>
                 <div>
                   <div className="font-medium">{stats.totalSuppliers - stats.completedSuppliers - stats.inProgressSuppliers}</div>
-                  <div className="text-muted-foreground">Not Started</div>
+                  <div className="text-muted-foreground">{t('dash.progress.notStarted')}</div>
                 </div>
               </div>
             </div>
@@ -233,7 +235,7 @@ export default function DashboardPage() {
       {stats && stats.recentExports.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Exports</CardTitle>
+            <CardTitle>{t('dash.recentExports')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -259,7 +261,7 @@ export default function DashboardPage() {
             </div>
             <Link href="/dashboard/exports">
               <Button variant="outline" className="w-full mt-4">
-                View All Exports
+                {t('dash.viewAllExports')}
               </Button>
             </Link>
           </CardContent>
@@ -270,17 +272,17 @@ export default function DashboardPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Users className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Get started</h3>
+            <h3 className="text-lg font-medium mb-2">{t('dash.empty.title')}</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Add your first supplier to begin collecting EUDR compliance data
+              {t('dash.empty.sub')}
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/dashboard/suppliers">
-                <Button>Add Supplier</Button>
+                <Button>{t('dash.empty.add')}</Button>
               </Link>
               <Button variant="outline" onClick={handleLoadSampleData} disabled={seeding}>
                 {seeding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Load sample data
+                {t('dash.empty.sample')}
               </Button>
             </div>
           </CardContent>
