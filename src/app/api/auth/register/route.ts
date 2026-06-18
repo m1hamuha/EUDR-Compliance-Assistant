@@ -9,6 +9,7 @@ import {
 } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
 import { sendWelcomeEmail } from '@/lib/email'
+import { logger, errorFields } from '@/lib/logger'
 
 const registerSchema = z.object({
   companyName: z.string().min(2).max(255),
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       clientId: client.id,
       userEmail: client.email
     })
+    logger.info('client_registered', { clientId: client.id, country: client.country })
 
     // Best-effort welcome email — must not fail registration.
     try {
@@ -90,7 +92,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    console.error('Registration error:', error)
+    logger.error('registration_failed', { route: '/api/auth/register', ...errorFields(error) })
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Registration failed' } },
       { status: 500 }

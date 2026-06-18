@@ -10,6 +10,7 @@ import {
   recordSuccessfulAttempt,
   clearLoginAttempts
 } from '@/lib/auth'
+import { logger, errorFields } from '@/lib/logger'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -48,6 +49,7 @@ export async function POST(request: NextRequest) {
 
     await clearLoginAttempts(email)
     await recordSuccessfulAttempt(email)
+    logger.info('login_succeeded', { clientId: client.id })
 
     const tokens = await createAuthTokens({
       sub: client.id,
@@ -74,7 +76,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    console.error('Login error:', error)
+    logger.error('login_failed', { route: '/api/auth/login', ...errorFields(error) })
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Authentication failed' } },
       { status: 500 }

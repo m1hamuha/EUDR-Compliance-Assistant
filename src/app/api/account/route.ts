@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireSession, revokeAllClientTokens, clearSessionCookies } from '@/lib/auth'
+import { logger, errorFields } from '@/lib/logger'
 
 /**
  * Permanently deletes the authenticated account and all of its data. Suppliers,
@@ -16,10 +17,11 @@ export async function DELETE() {
     await revokeAllClientTokens(clientId)
     await prisma.client.delete({ where: { id: clientId } })
     await clearSessionCookies()
+    logger.info('account_deleted', { clientId })
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Account deletion error:', error)
+    logger.error('account_deletion_failed', { route: '/api/account', ...errorFields(error) })
     return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 })
   }
 }
