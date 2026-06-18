@@ -20,7 +20,8 @@ import {
   Map as MapIcon,
   CreditCard,
   History,
-  ShieldAlert
+  ShieldAlert,
+  FileCheck
 } from 'lucide-react'
 
 const navigation = [
@@ -29,6 +30,7 @@ const navigation = [
   { key: 'nav.map', href: '/dashboard/map', icon: MapIcon },
   { key: 'nav.analytics', href: '/dashboard/analytics', icon: TrendingUp },
   { key: 'nav.risk', href: '/dashboard/risk', icon: ShieldAlert },
+  { key: 'nav.dds', href: '/dashboard/dds', icon: FileCheck },
   { key: 'nav.exports', href: '/dashboard/exports', icon: FileDown },
   { key: 'nav.activity', href: '/dashboard/activity', icon: History },
   { key: 'nav.billing', href: '/dashboard/billing', icon: CreditCard },
@@ -66,7 +68,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 print:bg-white">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -77,7 +79,7 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200 lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r transform transition-transform duration-200 lg:translate-x-0 print:hidden",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2 h-16 px-6 border-b">
@@ -140,9 +142,9 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 print:pl-0">
         {/* Mobile header */}
-        <header className="sticky top-0 z-30 flex items-center h-16 px-4 bg-white border-b lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center h-16 px-4 bg-white border-b lg:hidden print:hidden">
           <Button
             variant="ghost"
             size="icon"
