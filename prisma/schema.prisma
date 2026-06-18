@@ -74,8 +74,30 @@ model Client {
   exports       GeoJSONExport[]
   auditLogs     AuditLog[]
   snapshots     ComplianceSnapshot[]
+  ddsRecords    DDSRecord[]
 
   @@map("clients")
+}
+
+model DDSRecord {
+  id                String   @id @default(cuid())
+  clientId          String
+  client            Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  referenceNumber   String
+  conclusion        String
+  negligibleRisk    Boolean
+  riskIndex         Int
+  totalPlots        Int
+  totalAreaHectares Float
+  commodities       String[]
+  /** Full DueDiligenceStatement snapshot at the moment it was recorded. */
+  snapshot          Json
+
+  createdAt         DateTime @default(now())
+
+  @@index([clientId, createdAt])
+  @@map("dds_records")
 }
 
 model ComplianceSnapshot {

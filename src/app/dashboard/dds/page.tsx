@@ -4,32 +4,75 @@ import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, FileCheck, FileWarning, Printer, Download } from 'lucide-react'
+import { Loader2, FileCheck, FileWarning, Printer, Download, History, Save } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
 import { useI18n } from '@/lib/i18n'
 import { COMMODITY_LABELS, formatDate } from '@/lib/utils'
 import type { DueDiligenceStatement } from '@/lib/dds'
 
+interface DDSRecord {
+  id: string
+  referenceNumber: string
+  conclusion: 'ready' | 'due_diligence' | 'action_required'
+  negligibleRisk: boolean
+  riskIndex: number
+  totalPlots: number
+  totalAreaHectares: number
+  commodities: string[]
+  createdAt: string
+}
+
 export default function DDSPage() {
   const { t } = useI18n()
   const [dds, setDds] = useState<DueDiligenceStatement | null>(null)
+  const [records, setRecords] = useState<DDSRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [downloading, setDownloading] = useState(false)
+  const [recording, setRecording] = useState(false)
+  const [recordMsg, setRecordMsg] = useState<string | null>(null)
+
+  const loadRecords = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/dds/records')
+      if (res.ok) setRecords((await res.json()).records ?? [])
+    } catch (error) {
+      console.error('Failed to load DDS records:', error)
+    }
+  }, [])
 
   const load = useCallback(async () => {
     try {
       const res = await apiFetch('/api/dds')
       if (res.ok) setDds((await res.json()).dds)
+      await loadRecords()
     } catch (error) {
       console.error('Failed to load DDS:', error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [loadRecords])
 
   useEffect(() => {
     load()
   }, [load])
+
+  const handleRecord = async () => {
+    setRecording(true)
+    setRecordMsg(null)
+    try {
+      const res = await apiFetch('/api/dds/records', { method: 'POST' })
+      if (res.ok) {
+        setRecordMsg(t('dds.recorded'))
+        await loadRecords()
+      } else {
+        setRecordMsg(t('dds.recordFail'))
+      }
+    } catch {
+      setRecordMsg(t('dds.recordFail'))
+    } finally {
+      setRecording(false)
+    }
+  }
 
   const handleDownload = async () => {
     setDownloading(true)
@@ -89,6 +132,10 @@ export default function DDSPage() {
           <p className="text-muted-foreground">{t('dds.subtitle')}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRecord} disabled={recording}>
+            {recording ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            {t('dds.record')}
+          </Button>
           <Button variant="outline" onClick={handleDownload} disabled={downloading}>
             {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
             {t('dds.download')}
@@ -99,6 +146,12 @@ export default function DDSPage() {
           </Button>
         </div>
       </div>
+
+      {recordMsg && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800 print:hidden">
+          {recordMsg}
+        </div>
+      )}
 
       {/* Readiness banner */}
       <div
@@ -206,6 +259,43 @@ export default function DDSPage() {
           </div>
 
           <div className="border-t pt-4 text-xs text-muted-foreground">{t('dds.legal')}</div>
+        </CardContent>
+      </Card>
+
+      {/* Statement history — the audit trail of recorded statements */}
+      <Card className="print:hidden">
+        <CardContent className="p-6 space-y-3">
+          <h3 className="font-semibold flex items-center gap-2">
+            <History className="h-5 w-5 text-emerald-600" />
+            {t('dds.history')}
+          </h3>
+          {records.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('dds.history.empty')}</p>
+          ) : (
+            <div className="space-y-2">
+              {records.map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-sm font-medium">{r.referenceNumber}</span>
+                      <Badge variant={r.negligibleRisk ? 'success' : 'warning'}>
+                        {t(`risk.conclusion.${r.conclusion}.title`)}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {formatDate(r.createdAt)} · {t('dds.col.plots')}: {r.totalPlots} · {r.totalAreaHectares} ha
+                    </div>
+                  </div>
+                  <a href={`/api/dds/records/${r.id}`} className="shrink-0">
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-1" />
+                      {t('exp.download')}
+                    </Button>
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
