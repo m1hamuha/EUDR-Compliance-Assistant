@@ -14,12 +14,16 @@ import {
   ChevronRight,
   FileText,
   MapPin,
-  Square
+  Square,
+  Send,
+  ListChecks,
+  ExternalLink
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
 import { useI18n } from '@/lib/i18n'
 import { COMMODITY_LABELS } from '@/lib/utils'
 import type { PortfolioRisk, RiskLevel, CountryRiskCategory } from '@/lib/risk'
+import type { MitigationPlan, TaskPriority } from '@/lib/mitigation'
 
 type BadgeVariant = 'success' | 'warning' | 'destructive'
 
@@ -56,6 +60,11 @@ const SEVERITY_COLOR: Record<string, string> = {
   info: 'text-muted-foreground'
 }
 
+const PRIORITY_VARIANT: Record<TaskPriority, BadgeVariant> = {
+  high: 'destructive',
+  medium: 'warning'
+}
+
 function riskIndexColor(index: number): string {
   if (index >= 70) return '#dc2626'
   if (index >= 35) return '#d97706'
@@ -65,13 +74,20 @@ function riskIndexColor(index: number): string {
 export default function RiskPage() {
   const { t } = useI18n()
   const [data, setData] = useState<PortfolioRisk | null>(null)
+  const [plan, setPlan] = useState<MitigationPlan | null>(null)
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const [reminding, setReminding] = useState<string | null>(null)
+  const [reminderMsg, setReminderMsg] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const res = await apiFetch('/api/risk')
-      if (res.ok) setData((await res.json()).risk)
+      const [riskRes, planRes] = await Promise.all([
+        apiFetch('/api/risk'),
+        apiFetch('/api/mitigation')
+      ])
+      if (riskRes.ok) setData((await riskRes.json()).risk)
+      if (planRes.ok) setPlan((await planRes.json()).plan)
     } catch (error) {
       console.error('Failed to load risk assessment:', error)
     } finally {
@@ -82,6 +98,34 @@ export default function RiskPage() {
   useEffect(() => {
     load()
   }, [load])
+
+  const remind = async (supplierIds: string[], key: string) => {
+    if (supplierIds.length === 0) return
+    setReminding(key)
+    setReminderMsg(null)
+    try {
+      const res = await apiFetch('/api/suppliers/remind-bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ supplierIds })
+      })
+      const json = await res.json().catch(() => null)
+      if (res.ok) {
+        setReminderMsg(
+          json?.failed
+            ? t('mit.sentFailed', { sent: json.sent, failed: json.failed })
+            : t('mit.sent', { sent: json?.sent ?? supplierIds.length })
+        )
+        await load()
+      } else {
+        setReminderMsg(t('mit.sendFail'))
+      }
+    } catch {
+      setReminderMsg(t('mit.sendFail'))
+    } finally {
+      setReminding(null)
+    }
+  }
 
   const toggle = (id: string) => {
     setExpanded((prev) => {
@@ -224,6 +268,87 @@ export default function RiskPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Mitigation action plan — the "what to do now" companion to the verdict */}
+      {plan && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <CardTitle className="flex items-center gap-2">
+                <ListChecks className="h-5 w-5 text-emerald-600" />
+                {t('mit.title')}
+                {plan.tasks.length > 0 && <Badge variant="warning">{plan.tasks.length}</Badge>}
+              </CardTitle>
+              {plan.remindableSupplierIds.length > 0 && (
+                <Button
+                  onClick={() => remind(plan.remindableSupplierIds, 'all')}
+                  disabled={reminding !== null}
+                >
+                  {reminding === 'all' ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  {t('mit.remindAll', { n: plan.remindableSupplierIds.length })}
+                </Button>
+              )}
+            </div>
+            {reminderMsg && <p className="text-sm text-green-700 mt-2">{reminderMsg}</p>}
+          </CardHeader>
+          <CardContent>
+            {plan.tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('mit.none')}</p>
+            ) : (
+              <div className="space-y-2">
+                {plan.tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border p-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={PRIORITY_VARIANT[task.priority]}>
+                          {t(`mit.priority.${task.priority}`)}
+                        </Badge>
+                        <span className="font-medium text-sm">{t(task.titleKey)}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1 truncate">
+                        {task.supplierName} · {task.country}
+                        {' · '}
+                        {task.plotName ?? t('mit.supplierLevel')}
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      {task.action === 'remind' ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => remind([task.supplierId], task.id)}
+                          disabled={reminding !== null}
+                        >
+                          {reminding === task.id ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4 mr-1" />
+                          )}
+                          {t('mit.action.remind')}
+                        </Button>
+                      ) : (
+                        <Link href={`/dashboard/suppliers/${task.supplierId}`}>
+                          <Button variant="outline" size="sm">
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            {t('mit.action.view')}
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Risk by supplier */}
       <Card>
