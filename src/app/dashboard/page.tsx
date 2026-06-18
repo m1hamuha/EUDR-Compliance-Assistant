@@ -12,12 +12,21 @@ import {
   FileText,
   ArrowRight,
   Loader2,
-  Circle
+  Circle,
+  ListChecks,
+  FileCheck,
+  FileWarning
 } from 'lucide-react'
 import { formatBytes } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
 import { useI18n } from '@/lib/i18n'
 import { buildOnboarding } from '@/lib/onboarding'
+import type { MitigationPlan, TaskPriority } from '@/lib/mitigation'
+
+const PRIORITY_VARIANT: Record<TaskPriority, 'destructive' | 'warning'> = {
+  high: 'destructive',
+  medium: 'warning'
+}
 
 interface DashboardStats {
   totalSuppliers: number
@@ -36,6 +45,8 @@ interface DashboardStats {
 export default function DashboardPage() {
   const { t } = useI18n()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [plan, setPlan] = useState<MitigationPlan | null>(null)
+  const [dds, setDds] = useState<{ negligibleRisk: boolean; totalPlots: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
 
@@ -52,9 +63,23 @@ export default function DashboardPage() {
     setLoading(false)
   }, [])
 
+  const fetchActions = useCallback(async () => {
+    try {
+      const [planRes, ddsRes] = await Promise.all([apiFetch('/api/mitigation'), apiFetch('/api/dds')])
+      if (planRes.ok) setPlan((await planRes.json()).plan)
+      if (ddsRes.ok) {
+        const d = (await ddsRes.json()).dds
+        setDds({ negligibleRisk: d.negligibleRisk, totalPlots: d.totalPlots })
+      }
+    } catch (error) {
+      console.error('Failed to fetch next actions:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchStats()
-  }, [fetchStats])
+    fetchActions()
+  }, [fetchStats, fetchActions])
 
   const handleLoadSampleData = async () => {
     setSeeding(true)
@@ -145,6 +170,65 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {stats && stats.totalSuppliers > 0 && plan && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <CardTitle className="flex items-center gap-2">
+                <ListChecks className="h-5 w-5 text-emerald-600" />
+                {t('dash.nba.title')}
+              </CardTitle>
+              <Link href="/dashboard/risk">
+                <Button variant="outline" size="sm">
+                  {plan.tasks.length > 0 ? t('dash.nba.viewAll', { n: plan.tasks.length }) : t('nav.risk')}
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* DDS readiness */}
+            {dds && dds.totalPlots > 0 && (
+              <Link
+                href="/dashboard/dds"
+                className={`flex items-center justify-between gap-3 rounded-lg border p-3 hover:bg-gray-50 ${
+                  dds.negligibleRisk ? 'border-emerald-200 bg-emerald-50/50' : 'border-amber-200 bg-amber-50/50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {dds.negligibleRisk ? (
+                    <FileCheck className="h-5 w-5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <FileWarning className="h-5 w-5 text-amber-600 shrink-0" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {dds.negligibleRisk ? t('dash.nba.ready') : t('dash.nba.draft')}
+                  </span>
+                </div>
+                <span className="text-sm text-emerald-700 font-medium whitespace-nowrap">{t('dash.nba.viewStatement')}</span>
+              </Link>
+            )}
+
+            {/* Top mitigation tasks */}
+            {plan.tasks.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('dash.nba.allClear')}</p>
+            ) : (
+              <div className="space-y-2">
+                {plan.tasks.slice(0, 3).map((task) => (
+                  <div key={task.id} className="flex items-center gap-3 rounded-lg border p-3">
+                    <Badge variant={PRIORITY_VARIANT[task.priority]}>{t(`mit.priority.${task.priority}`)}</Badge>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium truncate">{t(task.titleKey)}</div>
+                      <div className="text-xs text-muted-foreground truncate">{task.supplierName}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {stats && stats.totalSuppliers > 0 && onboarding && !onboarding.allDone && (
         <Card className="border-emerald-200">
@@ -245,15 +329,15 @@ export default function DashboardPage() {
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                 >
                   <div>
-                    <div className="font-medium">GeoJSON Export</div>
+                    <div className="font-medium">{t('exp.item')}</div>
                     <div className="text-sm text-muted-foreground">
-                      {new Date(exportItem.createdAt).toLocaleDateString()} • {exportItem.supplierCount} suppliers
+                      {new Date(exportItem.createdAt).toLocaleDateString()} • {t('exp.suppliers', { n: exportItem.supplierCount })}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge variant="outline">{formatBytes(exportItem.fileSizeBytes)}</Badge>
                     <Button variant="outline" size="sm">
-                      Download
+                      {t('exp.download')}
                     </Button>
                   </div>
                 </div>
