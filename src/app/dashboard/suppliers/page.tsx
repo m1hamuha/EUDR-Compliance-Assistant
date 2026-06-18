@@ -33,6 +33,7 @@ import {
 import Papa from 'papaparse'
 import { formatDate, COMMODITY_LABELS } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n } from '@/lib/i18n'
 import type { SupplierStatus, Commodity } from '@prisma/client'
 
 interface Supplier {
@@ -54,15 +55,16 @@ const statusColors: Record<SupplierStatus, 'default' | 'secondary' | 'success' |
   ERROR: 'destructive'
 }
 
-const statusLabels: Record<SupplierStatus, string> = {
-  INVITED: 'Invited',
-  IN_PROGRESS: 'In Progress',
-  COMPLETED: 'Completed',
-  VALIDATED: 'Validated',
-  ERROR: 'Error'
+const statusKeys: Record<SupplierStatus, string> = {
+  INVITED: 'status.INVITED',
+  IN_PROGRESS: 'status.IN_PROGRESS',
+  COMPLETED: 'status.COMPLETED',
+  VALIDATED: 'status.VALIDATED',
+  ERROR: 'status.ERROR'
 }
 
 export default function SuppliersPage() {
+  const { t } = useI18n()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -139,11 +141,11 @@ export default function SuppliersPage() {
         fetchUsage()
       } else {
         const data = await response.json().catch(() => null)
-        setAddError(data?.error?.message ?? data?.error ?? 'Failed to add supplier.')
+        setAddError(data?.error?.message ?? data?.error ?? t('sup.add.fail'))
       }
     } catch (error) {
       console.error('Failed to add supplier:', error)
-      setAddError('Failed to add supplier.')
+      setAddError(t('sup.add.fail'))
     }
   }
 
@@ -178,16 +180,16 @@ export default function SuppliersPage() {
             setImportResult({ created: data.created ?? 0, errors: data.errors ?? [] })
             fetchSuppliers()
           } else {
-            setImportResult({ created: 0, errors: [{ row: 0, error: data.error || 'Import failed' }] })
+            setImportResult({ created: 0, errors: [{ row: 0, error: data.error || t('sup.import.fail') }] })
           }
         } catch {
-          setImportResult({ created: 0, errors: [{ row: 0, error: 'Import failed' }] })
+          setImportResult({ created: 0, errors: [{ row: 0, error: t('sup.import.fail') }] })
         } finally {
           setImporting(false)
         }
       },
       error: () => {
-        setImportResult({ created: 0, errors: [{ row: 0, error: 'Could not parse the CSV file' }] })
+        setImportResult({ created: 0, errors: [{ row: 0, error: t('sup.import.parseFail') }] })
         setImporting(false)
       }
     })
@@ -199,7 +201,7 @@ export default function SuppliersPage() {
         method: 'POST'
       })
       if (response.ok) {
-        alert('Reminder sent!')
+        alert(t('sup.reminderSent'))
       }
     } catch (error) {
       console.error('Failed to send reminder:', error)
@@ -210,14 +212,14 @@ export default function SuppliersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Suppliers</h1>
+          <h1 className="text-3xl font-bold">{t('sup.title')}</h1>
           <p className="text-muted-foreground">
-            Manage your supplier data collection
+            {t('sup.subtitle')}
             {usage && (
               <span className="ml-2">
-                · <span className="font-medium">{usage.used}{usage.max !== null ? ` / ${usage.max}` : ''}</span> used
+                · <span className="font-medium">{usage.used}{usage.max !== null ? ` / ${usage.max}` : ''}</span> {t('sup.used')}
                 {usage.max !== null && usage.used >= usage.max && (
-                  <Link href="/dashboard/billing" className="ml-2 text-emerald-700 hover:underline font-medium">Upgrade</Link>
+                  <Link href="/dashboard/billing" className="ml-2 text-emerald-700 hover:underline font-medium">{t('common.upgrade')}</Link>
                 )}
               </span>
             )}
@@ -226,13 +228,13 @@ export default function SuppliersPage() {
         <div className="flex gap-2">
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">Import CSV</Button>
+              <Button variant="outline">{t('sup.importCsv')}</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Import Suppliers from CSV</DialogTitle>
+                <DialogTitle>{t('sup.import.title')}</DialogTitle>
                 <DialogDescription>
-                  Upload a CSV file with columns: name, country, commodity, contactEmail (optional)
+                  {t('sup.import.desc')}
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4 space-y-3">
@@ -246,11 +248,11 @@ export default function SuppliersPage() {
                 />
                 {importResult && (
                   <div className="text-sm rounded-lg border p-3 bg-gray-50">
-                    <p className="font-medium text-green-700">{importResult.created} supplier(s) imported</p>
+                    <p className="font-medium text-green-700">{t('sup.import.result', { n: importResult.created })}</p>
                     {importResult.errors.length > 0 && (
                       <ul className="mt-2 list-disc pl-5 text-red-600">
                         {importResult.errors.slice(0, 5).map((err, i) => (
-                          <li key={i}>Row {err.row}: {err.error}</li>
+                          <li key={i}>{t('sup.import.row', { row: err.row, error: err.error })}</li>
                         ))}
                       </ul>
                     )}
@@ -258,10 +260,10 @@ export default function SuppliersPage() {
                 )}
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Close</Button>
+                <Button variant="outline" onClick={() => setImportDialogOpen(false)}>{t('common.close')}</Button>
                 <Button onClick={handleImportCsv} disabled={!csvFile || importing}>
                   {importing && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                  Import
+                  {t('sup.import.button')}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -271,33 +273,33 @@ export default function SuppliersPage() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Add Supplier
+                {t('sup.add')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Supplier</DialogTitle>
+                <DialogTitle>{t('sup.add.title')}</DialogTitle>
                 <DialogDescription>
-                  Add a supplier to start collecting EUDR compliance data
+                  {t('sup.add.desc')}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 {addError && (
                   <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">
                     {addError}{' '}
-                    <Link href="/dashboard/billing" className="underline font-medium">View plans</Link>
+                    <Link href="/dashboard/billing" className="underline font-medium">{t('sup.viewPlans')}</Link>
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label>Supplier Name</Label>
+                  <Label>{t('sup.name')}</Label>
                   <Input
                     value={newSupplier.name}
                     onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
-                    placeholder="e.g., Coffee Farm A"
+                    placeholder={t('sup.name.placeholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Country</Label>
+                  <Label>{t('sup.country')}</Label>
                   <Select
                     value={newSupplier.country}
                     onValueChange={(value) => setNewSupplier({ ...newSupplier, country: value })}
@@ -318,7 +320,7 @@ export default function SuppliersPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Commodity</Label>
+                  <Label>{t('sup.commodity')}</Label>
                   <Select
                     value={newSupplier.commodity}
                     onValueChange={(value) => setNewSupplier({ ...newSupplier, commodity: value as Commodity })}
@@ -338,7 +340,7 @@ export default function SuppliersPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Contact Email (optional)</Label>
+                  <Label>{t('sup.email')}</Label>
                   <Input
                     type="email"
                     value={newSupplier.contactEmail}
@@ -348,8 +350,8 @@ export default function SuppliersPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddSupplier} disabled={!newSupplier.name}>Add Supplier</Button>
+                <Button variant="outline" onClick={() => setAddDialogOpen(false)}>{t('common.cancel')}</Button>
+                <Button onClick={handleAddSupplier} disabled={!newSupplier.name}>{t('sup.add')}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -360,7 +362,7 @@ export default function SuppliersPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search suppliers..."
+            placeholder={t('sup.search')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -368,23 +370,23 @@ export default function SuppliersPage() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t('sup.filter.status')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="INVITED">Invited</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="VALIDATED">Validated</SelectItem>
-            <SelectItem value="ERROR">Error</SelectItem>
+            <SelectItem value="all">{t('sup.filter.allStatus')}</SelectItem>
+            <SelectItem value="INVITED">{t('status.INVITED')}</SelectItem>
+            <SelectItem value="IN_PROGRESS">{t('status.IN_PROGRESS')}</SelectItem>
+            <SelectItem value="COMPLETED">{t('status.COMPLETED')}</SelectItem>
+            <SelectItem value="VALIDATED">{t('status.VALIDATED')}</SelectItem>
+            <SelectItem value="ERROR">{t('status.ERROR')}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={commodityFilter} onValueChange={setCommodityFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Commodity" />
+            <SelectValue placeholder={t('sup.filter.commodity')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Commodities</SelectItem>
+            <SelectItem value="all">{t('sup.filter.allCommodities')}</SelectItem>
             <SelectItem value="COFFEE">Coffee</SelectItem>
             <SelectItem value="COCOA">Cocoa</SelectItem>
             <SelectItem value="WOOD">Wood</SelectItem>
@@ -398,7 +400,7 @@ export default function SuppliersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Supplier List</CardTitle>
+          <CardTitle>{t('sup.list')}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -407,7 +409,7 @@ export default function SuppliersPage() {
             </div>
           ) : suppliers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              No suppliers found. Add your first supplier to get started.
+              {t('sup.empty')}
             </div>
           ) : (
             <div className="space-y-3">
@@ -422,17 +424,17 @@ export default function SuppliersPage() {
                         {supplier.name}
                       </Link>
                       <Badge variant={statusColors[supplier.status]}>
-                        {statusLabels[supplier.status]}
+                        {t(statusKeys[supplier.status])}
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {COMMODITY_LABELS[supplier.commodity]} • {supplier.country} • {supplier._count.productionPlaces} places
+                      {COMMODITY_LABELS[supplier.commodity]} • {supplier.country} • {t('sup.places', { n: supplier._count.productionPlaces })}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     {supplier.invitationSentAt && (
                       <span className="text-xs text-muted-foreground">
-                        Invited {formatDate(supplier.invitationSentAt)}
+                        {t('sup.invited', { date: formatDate(supplier.invitationSentAt) })}
                       </span>
                     )}
                     {supplier.status === 'INVITED' || supplier.status === 'IN_PROGRESS' ? (
@@ -442,13 +444,13 @@ export default function SuppliersPage() {
                         onClick={() => handleSendReminder(supplier.id)}
                       >
                         <Mail className="h-4 w-4 mr-1" />
-                        Remind
+                        {t('sup.remind')}
                       </Button>
                     ) : (
                       <Link href={`/dashboard/suppliers/${supplier.id}`}>
                         <Button variant="outline" size="sm">
                           <FileText className="h-4 w-4 mr-1" />
-                          View
+                          {t('sup.view')}
                         </Button>
                       </Link>
                     )}

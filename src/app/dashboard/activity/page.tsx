@@ -17,6 +17,7 @@ import {
   Settings as SettingsIcon
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n } from '@/lib/i18n'
 import { formatDateTime } from '@/lib/utils'
 
 interface AuditLog {
@@ -56,6 +57,7 @@ function describe(log: AuditLog): string {
 }
 
 export default function ActivityPage() {
+  const { t } = useI18n()
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -77,15 +79,15 @@ export default function ActivityPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Activity</h1>
-        <p className="text-muted-foreground">A complete audit trail of actions on your account</p>
+        <h1 className="text-3xl font-bold">{t('act.title')}</h1>
+        <p className="text-muted-foreground">{t('act.subtitle')}</p>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <History className="h-5 w-5 text-emerald-600" />
-            Audit log
+            {t('act.auditLog')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -94,7 +96,7 @@ export default function ActivityPage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : logs.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">No activity recorded yet.</p>
+            <p className="text-sm text-muted-foreground py-6 text-center">{t('act.empty')}</p>
           ) : (
             <ol className="relative border-l border-slate-200 ml-3">
               {logs.map((log) => {

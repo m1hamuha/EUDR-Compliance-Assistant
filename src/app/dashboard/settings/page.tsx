@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog'
 import { Loader2 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n } from '@/lib/i18n'
 
 interface UserData {
   id: string
@@ -30,6 +31,7 @@ interface UserData {
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { t } = useI18n()
   const [user, setUser] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
   const [exporting, setExporting] = useState(false)
@@ -47,7 +49,7 @@ export default function SettingsPage() {
   const handleChangePassword = async () => {
     setPwMessage(null)
     if (pw.next !== pw.confirm) {
-      setPwMessage({ type: 'error', text: 'New passwords do not match.' })
+      setPwMessage({ type: 'error', text: t('set.pw.mismatch') })
       return
     }
     setPwSaving(true)
@@ -59,14 +61,14 @@ export default function SettingsPage() {
       })
       const data = await res.json().catch(() => null)
       if (res.ok) {
-        setPwMessage({ type: 'success', text: 'Password changed. Other sessions have been signed out.' })
+        setPwMessage({ type: 'success', text: t('set.pw.success') })
         setPw({ current: '', next: '', confirm: '' })
       } else {
         const detail = data?.error?.details?.[0]
-        setPwMessage({ type: 'error', text: detail ?? data?.error?.message ?? 'Could not change password.' })
+        setPwMessage({ type: 'error', text: detail ?? data?.error?.message ?? t('set.pw.fail') })
       }
     } catch {
-      setPwMessage({ type: 'error', text: 'Could not change password.' })
+      setPwMessage({ type: 'error', text: t('set.pw.fail') })
     } finally {
       setPwSaving(false)
     }
@@ -138,31 +140,31 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your account settings</p>
+        <h1 className="text-3xl font-bold">{t('set.title')}</h1>
+        <p className="text-muted-foreground">{t('set.subtitle')}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-          <CardDescription>Your company and account details</CardDescription>
+          <CardTitle>{t('set.account')}</CardTitle>
+          <CardDescription>{t('set.account.sub')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Company Name</Label>
+              <Label>{t('set.companyName')}</Label>
               <Input value={user?.companyName || ''} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{t('set.email')}</Label>
               <Input value={user?.email || ''} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Country</Label>
+              <Label>{t('set.country')}</Label>
               <Input value={user?.country || ''} disabled />
             </div>
             <div className="space-y-2">
-              <Label>Subscription Plan</Label>
+              <Label>{t('set.plan')}</Label>
               <Input value={user?.plan || ''} disabled />
             </div>
           </div>
@@ -171,24 +173,22 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Subscription</CardTitle>
-          <CardDescription>Manage your subscription and billing</CardDescription>
+          <CardTitle>{t('set.subscription')}</CardTitle>
+          <CardDescription>{t('set.subscription.sub')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg">
             <div>
               <div className="font-medium">
-                {user?.plan === 'TRIAL' ? 'Trial Plan' : 'Active Subscription'}
+                {user?.plan === 'TRIAL' ? t('set.trialPlan') : t('set.activeSub')}
               </div>
               <div className="text-sm text-muted-foreground">
-                {user?.plan === 'TRIAL' 
-                  ? 'Your trial is active. Upgrade to continue using the service.'
-                  : 'Your subscription is active and in good standing.'}
+                {user?.plan === 'TRIAL' ? t('set.trialMsg') : t('set.activeMsg')}
               </div>
             </div>
             <Link href="/dashboard/billing">
               <Button>
-                {user?.plan === 'TRIAL' ? 'Upgrade' : 'Manage'}
+                {user?.plan === 'TRIAL' ? t('common.upgrade') : t('set.manage')}
               </Button>
             </Link>
           </div>
@@ -197,8 +197,8 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Security</CardTitle>
-          <CardDescription>Change your password</CardDescription>
+          <CardTitle>{t('set.security')}</CardTitle>
+          <CardDescription>{t('set.security.sub')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {pwMessage && (
@@ -208,72 +208,71 @@ export default function SettingsPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Current password</Label>
+              <Label>{t('set.pw.current')}</Label>
               <Input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>New password</Label>
-              <Input type="password" placeholder="At least 12 characters" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+              <Label>{t('set.pw.new')}</Label>
+              <Input type="password" placeholder={t('auth.passwordMin')} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Confirm new password</Label>
+              <Label>{t('set.pw.confirm')}</Label>
               <Input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
             </div>
           </div>
           <Button onClick={handleChangePassword} disabled={pwSaving || !pw.current || !pw.next}>
             {pwSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Change password
+            {t('set.pw.change')}
           </Button>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Data & Privacy</CardTitle>
-          <CardDescription>Manage your data and privacy settings</CardDescription>
+          <CardTitle>{t('set.data')}</CardTitle>
+          <CardDescription>{t('set.data.sub')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
-              <div className="font-medium">Export All Data</div>
+              <div className="font-medium">{t('set.export')}</div>
               <div className="text-sm text-muted-foreground">
-                Download all your supplier and production place data
+                {t('set.export.sub')}
               </div>
             </div>
             <Button variant="outline" onClick={handleExportData} disabled={exporting}>
               {exporting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Export
+              {t('set.export.button')}
             </Button>
           </div>
           <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg">
             <div>
-              <div className="font-medium text-red-600">Delete Account</div>
+              <div className="font-medium text-red-600">{t('set.delete')}</div>
               <div className="text-sm text-muted-foreground">
-                Permanently delete your account and all data
+                {t('set.delete.sub')}
               </div>
             </div>
             <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); setDeleteConfirm('') }}>
               <DialogTrigger asChild>
-                <Button variant="destructive">Delete</Button>
+                <Button variant="destructive">{t('set.delete.button')}</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Delete account?</DialogTitle>
+                  <DialogTitle>{t('set.delete.confirmTitle')}</DialogTitle>
                   <DialogDescription>
-                    This permanently deletes your account and all suppliers, production places,
-                    exports, and history. This cannot be undone. Type <strong>DELETE</strong> to confirm.
+                    {t('set.delete.confirmBody', { keyword: 'DELETE' })}
                   </DialogDescription>
                 </DialogHeader>
                 <Input value={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.value)} placeholder="DELETE" />
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => setDeleteOpen(false)}>{t('common.cancel')}</Button>
                   <Button
                     variant="destructive"
                     onClick={handleDeleteAccount}
                     disabled={deleteConfirm !== 'DELETE' || deleting}
                   >
                     {deleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Delete my account
+                    {t('set.delete.final')}
                   </Button>
                 </DialogFooter>
               </DialogContent>

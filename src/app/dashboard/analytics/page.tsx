@@ -17,6 +17,7 @@ import {
   FileText
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n } from '@/lib/i18n'
 import { COMMODITY_LABELS } from '@/lib/utils'
 
 interface Analytics {
@@ -44,10 +45,11 @@ interface Analytics {
 }
 
 function ScoreTrend({ history }: { history: Array<{ date: string; score: number }> }) {
+  const { t } = useI18n()
   if (history.length < 2) {
     return (
       <div className="flex items-center justify-center h-40 text-sm text-muted-foreground text-center px-4">
-        Your score is tracked daily — the trend will appear here over the next few days.
+        {t('an.score.tracking')}
       </div>
     )
   }
@@ -66,7 +68,7 @@ function ScoreTrend({ history }: { history: Array<{ date: string; score: number 
       <div className="flex items-baseline gap-2 mb-2">
         <span className="text-3xl font-bold text-emerald-700">{last}</span>
         <span className={`text-sm font-medium ${delta >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-          {delta >= 0 ? '▲' : '▼'} {Math.abs(delta)} pts in {history.length} days
+          {delta >= 0 ? '▲' : '▼'} {t('an.score.delta', { delta: Math.abs(delta), days: history.length })}
         </span>
       </div>
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-40" preserveAspectRatio="none">
@@ -144,14 +146,15 @@ function KpiCard({ icon: Icon, label, value, sub }: { icon: React.ElementType; l
   )
 }
 
-const FUNNEL_STAGES: Array<{ key: keyof Analytics['funnel']; label: string; color: string }> = [
-  { key: 'invited', label: 'Invited', color: 'bg-gray-400' },
-  { key: 'inProgress', label: 'In Progress', color: 'bg-amber-500' },
-  { key: 'completed', label: 'Completed', color: 'bg-sky-500' },
-  { key: 'validated', label: 'Validated', color: 'bg-green-600' }
+const FUNNEL_STAGES: Array<{ key: keyof Analytics['funnel']; labelKey: string; color: string }> = [
+  { key: 'invited', labelKey: 'an.funnel.invited', color: 'bg-gray-400' },
+  { key: 'inProgress', labelKey: 'an.funnel.inProgress', color: 'bg-amber-500' },
+  { key: 'completed', labelKey: 'an.funnel.completed', color: 'bg-sky-500' },
+  { key: 'validated', labelKey: 'an.funnel.validated', color: 'bg-green-600' }
 ]
 
 export default function AnalyticsPage() {
+  const { t } = useI18n()
   const [data, setData] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(true)
   const [reminding, setReminding] = useState(false)
@@ -189,13 +192,17 @@ export default function AnalyticsPage() {
       })
       const json = await res.json()
       if (res.ok) {
-        setReminderMsg(`Reminders sent: ${json.sent}${json.failed ? `, failed: ${json.failed}` : ''}`)
+        setReminderMsg(
+          json.failed
+            ? t('an.atRisk.sentFailed', { sent: json.sent, failed: json.failed })
+            : t('an.atRisk.sent', { sent: json.sent })
+        )
         fetchAnalytics()
       } else {
-        setReminderMsg(json.error || 'Failed to send reminders')
+        setReminderMsg(json.error || t('an.atRisk.sendFail'))
       }
     } catch {
-      setReminderMsg('Failed to send reminders')
+      setReminderMsg(t('an.atRisk.sendFail'))
     } finally {
       setReminding(false)
     }
@@ -213,15 +220,15 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Supply-chain compliance performance</p>
+          <h1 className="text-3xl font-bold">{t('an.title')}</h1>
+          <p className="text-muted-foreground">{t('an.subtitle')}</p>
         </div>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <TrendingUp className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">No data yet</h3>
+            <h3 className="text-lg font-medium mb-2">{t('an.empty.title')}</h3>
             <p className="text-muted-foreground text-center">
-              Invite suppliers and collect production data to see your compliance metrics.
+              {t('an.empty.sub')}
             </p>
           </CardContent>
         </Card>
@@ -237,13 +244,13 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Supply-chain compliance performance</p>
+          <h1 className="text-3xl font-bold">{t('an.title')}</h1>
+          <p className="text-muted-foreground">{t('an.subtitle')}</p>
         </div>
         <Link href="/report">
           <Button variant="outline">
             <FileText className="h-4 w-4 mr-2" />
-            Compliance report
+            {t('an.report')}
           </Button>
         </Link>
       </div>
@@ -254,33 +261,33 @@ export default function AnalyticsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-emerald-600" />
-              Compliance Readiness
+              {t('an.readiness')}
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <ScoreGauge score={data.complianceScore} />
             <p className="text-sm text-muted-foreground text-center mt-4">
-              Weighted from completion rate (60%) and validation pass rate (40%).
+              {t('an.readiness.note')}
             </p>
           </CardContent>
         </Card>
 
         <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-          <KpiCard icon={Users} label="Response rate" value={`${data.responseRate}%`} sub="Suppliers that engaged" />
-          <KpiCard icon={CheckCircle2} label="Completion rate" value={`${data.completionRate}%`} sub="Finished data collection" />
+          <KpiCard icon={Users} label={t('an.kpi.response')} value={`${data.responseRate}%`} sub={t('an.kpi.response.sub')} />
+          <KpiCard icon={CheckCircle2} label={t('an.kpi.completion')} value={`${data.completionRate}%`} sub={t('an.kpi.completion.sub')} />
           <KpiCard
             icon={Clock}
-            label="Avg time to compliance"
+            label={t('an.kpi.time')}
             value={data.avgTimeToCompleteDays !== null ? `${data.avgTimeToCompleteDays}d` : '—'}
-            sub="Invitation → completion"
+            sub={t('an.kpi.time.sub')}
           />
-          <KpiCard icon={ShieldCheck} label="Validation pass rate" value={`${data.validationPassRate}%`} sub={`${data.totalPlaces} production places`} />
+          <KpiCard icon={ShieldCheck} label={t('an.kpi.validation')} value={`${data.validationPassRate}%`} sub={t('an.kpi.validation.sub', { n: data.totalPlaces })} />
         </div>
       </div>
 
       {/* Score over time */}
       <Card>
-        <CardHeader><CardTitle>Compliance score over time</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('an.scoreOverTime')}</CardTitle></CardHeader>
         <CardContent>
           <ScoreTrend history={data.scoreHistory} />
         </CardContent>
@@ -289,14 +296,14 @@ export default function AnalyticsPage() {
       {/* Funnel + trend */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle>Collection funnel</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('an.funnel')}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {FUNNEL_STAGES.map((stage) => {
               const value = data.funnel[stage.key]
               return (
                 <div key={stage.key}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span>{stage.label}</span>
+                    <span>{t(stage.labelKey)}</span>
                     <span className="font-medium">{value}</span>
                   </div>
                   <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
@@ -309,7 +316,7 @@ export default function AnalyticsPage() {
               )
             })}
             {data.funnel.error > 0 && (
-              <p className="text-xs text-red-600 pt-1">{data.funnel.error} supplier(s) in error state</p>
+              <p className="text-xs text-red-600 pt-1">{t('an.funnel.error', { n: data.funnel.error })}</p>
             )}
           </CardContent>
         </Card>
@@ -317,10 +324,10 @@ export default function AnalyticsPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Completions per week</CardTitle>
+              <CardTitle>{t('an.weekly')}</CardTitle>
               <div className="flex items-center gap-3 text-sm">
                 <span className="text-muted-foreground">
-                  {data.momentum.completedThisPeriod} this week
+                  {t('an.weekly.thisWeek', { n: data.momentum.completedThisPeriod })}
                 </span>
                 <DeltaBadge delta={data.momentum.completedDeltaPct} />
               </div>
@@ -349,13 +356,13 @@ export default function AnalyticsPage() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <CardTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              At-risk suppliers
+              {t('an.atRisk')}
               {data.atRisk.length > 0 && <Badge variant="warning">{data.atRisk.length}</Badge>}
             </CardTitle>
             {remindableCount > 0 && (
               <Button onClick={handleRemindAll} disabled={reminding}>
                 {reminding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
-                Send {remindableCount} reminder{remindableCount > 1 ? 's' : ''}
+                {t('an.atRisk.send', { n: remindableCount })}
               </Button>
             )}
           </div>
@@ -363,7 +370,7 @@ export default function AnalyticsPage() {
         </CardHeader>
         <CardContent>
           {data.atRisk.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No stalled invitations — every supplier is engaged. 🎉</p>
+            <p className="text-sm text-muted-foreground">{t('an.atRisk.none')}</p>
           ) : (
             <div className="space-y-2">
               {data.atRisk.slice(0, 10).map((s) => (
@@ -375,8 +382,8 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    {!s.hasEmail && <Badge variant="secondary">No email</Badge>}
-                    <Badge variant="destructive">{s.daysWaiting}d waiting</Badge>
+                    {!s.hasEmail && <Badge variant="secondary">{t('an.atRisk.noEmail')}</Badge>}
+                    <Badge variant="destructive">{t('an.atRisk.waiting', { n: s.daysWaiting })}</Badge>
                   </div>
                 </div>
               ))}
@@ -388,7 +395,7 @@ export default function AnalyticsPage() {
       {/* Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader><CardTitle>By commodity</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('an.byCommodity')}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {data.byCommodity.map((c) => (
               <div key={c.commodity} className="flex items-center justify-between text-sm">
@@ -399,7 +406,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle>Country coverage</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{t('an.coverage')}</CardTitle></CardHeader>
           <CardContent className="space-y-2">
             {data.coverageByCountry.map((c) => (
               <div key={c.country} className="flex items-center justify-between text-sm">

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, MapPin, Square, CheckCircle2, AlertTriangle, Clock } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
+import { useI18n } from '@/lib/i18n'
 import { COMMODITY_LABELS, formatDate } from '@/lib/utils'
 
 interface ProductionPlace {
@@ -34,13 +35,14 @@ interface Supplier {
   productionPlaces: ProductionPlace[]
 }
 
-const validationBadge: Record<string, { variant: 'success' | 'destructive' | 'secondary'; label: string }> = {
-  VALID: { variant: 'success', label: 'Valid' },
-  INVALID: { variant: 'destructive', label: 'Invalid' },
-  PENDING: { variant: 'secondary', label: 'Pending' }
+const validationBadge: Record<string, { variant: 'success' | 'destructive' | 'secondary'; labelKey: string }> = {
+  VALID: { variant: 'success', labelKey: 'val.VALID' },
+  INVALID: { variant: 'destructive', labelKey: 'val.INVALID' },
+  PENDING: { variant: 'secondary', labelKey: 'val.PENDING' }
 }
 
 export default function SupplierDetailPage() {
+  const { t } = useI18n()
   const params = useParams()
   const router = useRouter()
   const id = params.id as string
@@ -79,9 +81,9 @@ export default function SupplierDetailPage() {
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.push('/dashboard/suppliers')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to suppliers
+          {t('sd.back')}
         </Button>
-        <Card><CardContent className="py-12 text-center text-muted-foreground">Supplier not found.</CardContent></Card>
+        <Card><CardContent className="py-12 text-center text-muted-foreground">{t('sd.notFound')}</CardContent></Card>
       </div>
     )
   }
@@ -92,7 +94,7 @@ export default function SupplierDetailPage() {
     <div className="space-y-6">
       <Button variant="ghost" onClick={() => router.push('/dashboard/suppliers')} className="-ml-2">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to suppliers
+        {t('sd.back')}
       </Button>
 
       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -102,27 +104,27 @@ export default function SupplierDetailPage() {
             {COMMODITY_LABELS[supplier.commodity] ?? supplier.commodity} • {supplier.country}
           </p>
         </div>
-        <Badge variant="outline" className="text-sm">{supplier.status.replace('_', ' ')}</Badge>
+        <Badge variant="outline" className="text-sm">{t(`status.${supplier.status}`)}</Badge>
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Supplier details</CardTitle></CardHeader>
+        <CardHeader><CardTitle>{t('sd.details')}</CardTitle></CardHeader>
         <CardContent>
           <dl className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <dt className="text-muted-foreground">Contact email</dt>
+              <dt className="text-muted-foreground">{t('sd.email')}</dt>
               <dd className="font-medium">{supplier.contactEmail ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Contact phone</dt>
+              <dt className="text-muted-foreground">{t('sd.phone')}</dt>
               <dd className="font-medium">{supplier.contactPhone ?? '—'}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Invited</dt>
+              <dt className="text-muted-foreground">{t('sd.invited')}</dt>
               <dd className="font-medium">{supplier.invitationSentAt ? formatDate(supplier.invitationSentAt) : '—'}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Completed</dt>
+              <dt className="text-muted-foreground">{t('sd.completed')}</dt>
               <dd className="font-medium">{supplier.completedAt ? formatDate(supplier.completedAt) : '—'}</dd>
             </div>
           </dl>
@@ -132,9 +134,9 @@ export default function SupplierDetailPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Production places</CardTitle>
+            <CardTitle>{t('sd.places')}</CardTitle>
             <span className="text-sm text-muted-foreground">
-              {validCount}/{supplier.productionPlaces.length} valid
+              {t('sd.placesValid', { valid: validCount, total: supplier.productionPlaces.length })}
             </span>
           </div>
         </CardHeader>
@@ -142,7 +144,7 @@ export default function SupplierDetailPage() {
           {supplier.productionPlaces.length === 0 ? (
             <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
               <Clock className="h-4 w-4" />
-              No production places submitted yet — waiting on the supplier.
+              {t('sd.placesEmpty')}
             </div>
           ) : (
             <div className="space-y-3">
@@ -166,11 +168,11 @@ export default function SupplierDetailPage() {
                         ) : place.validationStatus === 'INVALID' ? (
                           <AlertTriangle className="h-3 w-3 mr-1" />
                         ) : null}
-                        {badge.label}
+                        {t(badge.labelKey)}
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {place.areaHectares} ha • {place.geometryType} • {place.country}
+                      {t('sd.areaLine', { ha: place.areaHectares, type: place.geometryType, country: place.country })}
                     </div>
                     {errors.length > 0 && (
                       <ul className="mt-2 text-sm text-red-600 list-disc pl-5">
