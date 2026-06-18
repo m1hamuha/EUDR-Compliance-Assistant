@@ -12,6 +12,7 @@ const mockPrisma = prisma as unknown as {
   client: { findUnique: jest.Mock }
   supplier: { findMany: jest.Mock }
   dDSRecord: { findMany: jest.Mock; create: jest.Mock }
+  auditLog: { create: jest.Mock }
 }
 
 beforeEach(() => {
@@ -21,6 +22,7 @@ beforeEach(() => {
     country: 'DE',
     email: 'ops@acme.test'
   })
+  mockPrisma.auditLog.create.mockResolvedValue({})
 })
 
 describe('GET /api/dds/records', () => {
@@ -79,6 +81,11 @@ describe('POST /api/dds/records', () => {
     expect(createArg.data.clientId).toBe('client-1')
     expect(createArg.data.commodities).toEqual(['COFFEE'])
     expect(createArg.data.snapshot).toMatchObject({ referenceNumber: expect.any(String) })
+
+    // The recording is written to the audit trail.
+    expect(mockPrisma.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ action: 'DDS_RECORD' }) })
+    )
   })
 
   it('returns 400 when there is nothing to record', async () => {

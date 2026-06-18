@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { loadDDS } from '@/lib/dds-load'
+import { createAuditLog } from '@/lib/audit'
 
 /** Lists the client's recorded Due Diligence Statements, most recent first. */
 export async function GET() {
@@ -69,6 +70,20 @@ export async function POST() {
         createdAt: true
       }
     })
+
+    // Record the statement in the audit trail (best-effort — never fail the
+    // recording itself because the audit write hiccupped).
+    try {
+      await createAuditLog(
+        'DDS_RECORD',
+        'DDSRecord',
+        record.id,
+        { clientId: session.sub, userEmail: session.email },
+        { reference: record.referenceNumber, conclusion: record.conclusion, plots: record.totalPlots }
+      )
+    } catch (auditError) {
+      console.error('Failed to audit-log DDS record (non-fatal):', auditError)
+    }
 
     return NextResponse.json({ record }, { status: 201 })
   } catch (error) {
