@@ -1,64 +1,15 @@
 import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
-import { buildDDS } from '@/lib/dds'
-import type { SupplierInput } from '@/lib/risk'
+import { loadDDS } from '@/lib/dds-load'
 
 export async function GET(request: Request) {
   try {
     const session = await requireSession()
-    const clientId = session.sub
+    const dds = await loadDDS(session.sub)
 
-    const [client, suppliers] = await Promise.all([
-      prisma.client.findUnique({
-        where: { id: clientId },
-        select: { companyName: true, country: true, email: true }
-      }),
-      prisma.supplier.findMany({
-        where: { clientId },
-        select: {
-          id: true,
-          name: true,
-          country: true,
-          commodity: true,
-          productionPlaces: {
-            select: {
-              id: true,
-              name: true,
-              country: true,
-              areaHectares: true,
-              geometryType: true,
-              validationStatus: true
-            }
-          }
-        }
-      })
-    ])
-
-    if (!client) {
+    if (!dds) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
-
-    const input: SupplierInput[] = suppliers.map((s) => ({
-      id: s.id,
-      name: s.name,
-      country: s.country,
-      commodity: s.commodity,
-      places: s.productionPlaces.map((p) => ({
-        id: p.id,
-        name: p.name,
-        country: p.country,
-        areaHectares: p.areaHectares,
-        geometryType: p.geometryType,
-        validationStatus: p.validationStatus
-      }))
-    }))
-
-    const dds = buildDDS({
-      clientId,
-      operator: { companyName: client.companyName, country: client.country, email: client.email },
-      suppliers: input
-    })
 
     // `?download=1` returns the machine-readable statement as a file attachment,
     // mirroring the structured payload an operator submits to the EU Information

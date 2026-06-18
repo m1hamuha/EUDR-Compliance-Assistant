@@ -398,7 +398,17 @@ const en: Dict = {
 
   // supplier detail risk
   'sd.risk': 'Risk assessment',
-  'sd.risk.none': 'No risk factors flagged.'
+  'sd.risk.none': 'No risk factors flagged.',
+
+  // dds history / records
+  'dds.record': 'Record statement',
+  'dds.recorded': 'Statement recorded to your history.',
+  'dds.recordFail': 'Could not record the statement.',
+  'dds.history': 'Statement history',
+  'dds.history.empty': 'No statements recorded yet.',
+  'dds.col.ref': 'Reference',
+  'dds.col.date': 'Date',
+  'dds.col.conclusion': 'Conclusion'
 }
 
 const de: Dict = {
@@ -790,7 +800,17 @@ const de: Dict = {
 
   // supplier detail risk
   'sd.risk': 'Risikobewertung',
-  'sd.risk.none': 'Keine Risikofaktoren festgestellt.'
+  'sd.risk.none': 'Keine Risikofaktoren festgestellt.',
+
+  // dds history / records
+  'dds.record': 'Erklärung speichern',
+  'dds.recorded': 'Erklärung in Ihrem Verlauf gespeichert.',
+  'dds.recordFail': 'Die Erklärung konnte nicht gespeichert werden.',
+  'dds.history': 'Erklärungsverlauf',
+  'dds.history.empty': 'Noch keine Erklärungen gespeichert.',
+  'dds.col.ref': 'Referenz',
+  'dds.col.date': 'Datum',
+  'dds.col.conclusion': 'Schlussfolgerung'
 }
 
 export const dictionaries: Record<Locale, Dict> = { en, de }

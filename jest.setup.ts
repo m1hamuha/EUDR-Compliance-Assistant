@@ -109,6 +109,11 @@ jest.mock('@/lib/prisma', () => ({
       findFirst: jest.fn(),
       findMany: jest.fn(),
     },
+    dDSRecord: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      findMany: jest.fn(),
+    },
   },
 }))
 
