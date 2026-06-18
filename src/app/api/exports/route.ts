@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth'
 import { generateExport } from '@/lib/geojson'
+import { prisma } from '@/lib/prisma'
+import { canExport, getPlan } from '@/lib/plans'
 import { z } from 'zod'
 
 const exportSchema = z.object({
@@ -56,6 +58,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     const validatedData = exportSchema.parse(body)
+
+    // Enforce the plan's monthly export allowance.
+    const client = await prisma.client.findUnique({
+      where: { id: session.sub },
+      select: { plan: true }
+    })
+    if (client) {
+      const startOfMonth = new Date()
+      startOfMonth.setUTCDate(1)
+      startOfMonth.setUTCHours(0, 0, 0, 0)
+      const usedThisMonth = await prisma.geoJSONExport.count({
+        where: { clientId: session.sub, createdAt: { gte: startOfMonth } }
+      })
+      if (!canExport(client.plan, usedThisMonth)) {
+        const plan = getPlan(client.plan)
+        return NextResponse.json(
+          {
+            error: {
+              code: 'PLAN_LIMIT_REACHED',
+              message: `Your ${plan.name} plan allows ${plan.maxExportsPerMonth} exports per month. Upgrade for more.`,
+              plan: client.plan
+            }
+          },
+          { status: 403 }
+        )
+      }
+    }
 
     const result = await generateExport(session.sub, validatedData)
 

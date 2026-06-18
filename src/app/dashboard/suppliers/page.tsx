@@ -73,6 +73,8 @@ export default function SuppliersPage() {
   const [csvFile, setCsvFile] = useState<File | null>(null)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<{ created: number; errors: Array<{ row: number; error: string }> } | null>(null)
+  const [usage, setUsage] = useState<{ used: number; max: number | null } | null>(null)
+  const [addError, setAddError] = useState<string | null>(null)
 
   const [newSupplier, setNewSupplier] = useState({
     name: '',
@@ -101,11 +103,28 @@ export default function SuppliersPage() {
     }
   }, [search, statusFilter, commodityFilter])
 
+  const fetchUsage = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/account/usage')
+      if (res.ok) {
+        const data = await res.json()
+        setUsage({ used: data.usage.suppliers, max: data.definition.maxSuppliers })
+      }
+    } catch {
+      // non-fatal
+    }
+  }, [])
+
   useEffect(() => {
     fetchSuppliers()
   }, [fetchSuppliers])
 
+  useEffect(() => {
+    fetchUsage()
+  }, [fetchUsage])
+
   const handleAddSupplier = async () => {
+    setAddError(null)
     try {
       const response = await apiFetch('/api/suppliers', {
         method: 'POST',
@@ -117,9 +136,14 @@ export default function SuppliersPage() {
         setAddDialogOpen(false)
         setNewSupplier({ name: '', country: 'BR', commodity: 'COFFEE', contactEmail: '' })
         fetchSuppliers()
+        fetchUsage()
+      } else {
+        const data = await response.json().catch(() => null)
+        setAddError(data?.error?.message ?? data?.error ?? 'Failed to add supplier.')
       }
     } catch (error) {
       console.error('Failed to add supplier:', error)
+      setAddError('Failed to add supplier.')
     }
   }
 
@@ -187,7 +211,17 @@ export default function SuppliersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Suppliers</h1>
-          <p className="text-muted-foreground">Manage your supplier data collection</p>
+          <p className="text-muted-foreground">
+            Manage your supplier data collection
+            {usage && (
+              <span className="ml-2">
+                · <span className="font-medium">{usage.used}{usage.max !== null ? ` / ${usage.max}` : ''}</span> used
+                {usage.max !== null && usage.used >= usage.max && (
+                  <Link href="/dashboard/billing" className="ml-2 text-emerald-700 hover:underline font-medium">Upgrade</Link>
+                )}
+              </span>
+            )}
+          </p>
         </div>
         <div className="flex gap-2">
           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
@@ -248,6 +282,12 @@ export default function SuppliersPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
+                {addError && (
+                  <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">
+                    {addError}{' '}
+                    <Link href="/dashboard/billing" className="underline font-medium">View plans</Link>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>Supplier Name</Label>
                   <Input

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { addDays } from 'date-fns'
 import { generateToken } from '@/lib/utils'
 import { sendSupplierInvitation } from '@/lib/email'
+import { canAddSuppliers, getPlan } from '@/lib/plans'
 
 const supplierInviteSchema = z.object({
   name: z.string().min(1).max(255),
@@ -93,16 +94,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (client.plan === 'TRIAL') {
-      const supplierCount = await prisma.supplier.count({
-        where: { clientId: session.sub }
-      })
-      if (supplierCount >= 3) {
-        return NextResponse.json(
-          { error: 'Trial plan allows only 3 suppliers. Please upgrade to continue.' },
-          { status: 403 }
-        )
-      }
+    const supplierCount = await prisma.supplier.count({
+      where: { clientId: session.sub }
+    })
+    if (!canAddSuppliers(client.plan, supplierCount, 1)) {
+      const plan = getPlan(client.plan)
+      return NextResponse.json(
+        {
+          error: {
+            code: 'PLAN_LIMIT_REACHED',
+            message: `Your ${plan.name} plan allows up to ${plan.maxSuppliers} suppliers. Upgrade to add more.`,
+            limit: plan.maxSuppliers,
+            plan: client.plan
+          }
+        },
+        { status: 403 }
+      )
     }
 
     const invitationToken = generateToken()
