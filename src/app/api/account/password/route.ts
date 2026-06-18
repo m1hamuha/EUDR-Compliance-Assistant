@@ -9,6 +9,7 @@ import {
   revokeAllClientTokens
 } from '@/lib/auth'
 import { createAuditLog } from '@/lib/audit'
+import { logger, errorFields } from '@/lib/logger'
 
 const schema = z.object({
   currentPassword: z.string().min(1),
@@ -62,13 +63,14 @@ export async function POST(request: NextRequest) {
       clientId: client.id,
       userEmail: client.email
     })
+    logger.info('password_changed', { clientId: client.id })
 
     return NextResponse.json({ success: true })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: { code: 'VALIDATION_ERROR', message: 'Validation error', details: error.issues } }, { status: 400 })
     }
-    console.error('Password change error:', error)
+    logger.error('password_change_failed', { route: '/api/account/password', ...errorFields(error) })
     return NextResponse.json({ error: 'Failed to change password' }, { status: 500 })
   }
 }
