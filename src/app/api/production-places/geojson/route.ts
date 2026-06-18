@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { requireSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { assessPlace } from '@/lib/risk'
 
 /**
  * Returns all of the authenticated client's production places as a GeoJSON
  * FeatureCollection (geometry is already stored in [lng, lat] order), enriched
- * with supplier name and EUDR validation status for map rendering.
+ * with supplier name, EUDR validation status and deforestation-risk level for
+ * map rendering.
  */
 export async function GET() {
   try {
@@ -16,6 +18,7 @@ export async function GET() {
       select: {
         id: true,
         name: true,
+        country: true,
         areaHectares: true,
         geometryType: true,
         validationStatus: true,
@@ -26,19 +29,33 @@ export async function GET() {
 
     const features = places
       .filter((p) => p.coordinates && typeof p.coordinates === 'object')
-      .map((p) => ({
-        type: 'Feature' as const,
-        geometry: p.coordinates,
-        properties: {
-          id: p.id,
-          name: p.name,
-          supplier: p.supplier.name,
-          commodity: p.supplier.commodity,
-          areaHectares: p.areaHectares,
-          geometryType: p.geometryType,
-          validationStatus: p.validationStatus
+      .map((p) => {
+        const risk = assessPlace(
+          {
+            id: p.id,
+            name: p.name,
+            country: p.country ?? '',
+            areaHectares: p.areaHectares,
+            geometryType: p.geometryType,
+            validationStatus: p.validationStatus
+          },
+          { id: '', name: p.supplier.name, country: p.country ?? '', commodity: p.supplier.commodity, places: [] }
+        )
+        return {
+          type: 'Feature' as const,
+          geometry: p.coordinates,
+          properties: {
+            id: p.id,
+            name: p.name,
+            supplier: p.supplier.name,
+            commodity: p.supplier.commodity,
+            areaHectares: p.areaHectares,
+            geometryType: p.geometryType,
+            validationStatus: p.validationStatus,
+            riskLevel: risk.level
+          }
         }
-      }))
+      })
 
     return NextResponse.json({
       type: 'FeatureCollection',

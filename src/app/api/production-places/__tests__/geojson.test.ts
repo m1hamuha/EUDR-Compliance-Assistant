@@ -18,7 +18,7 @@ describe('GET /api/production-places/geojson', () => {
   it('returns a FeatureCollection enriched with supplier and validation status', async () => {
     mockPrisma.productionPlace.findMany.mockResolvedValue([
       {
-        id: 'p1', name: 'Plot A', areaHectares: 5, geometryType: 'POINT',
+        id: 'p1', name: 'Plot A', country: 'BR', areaHectares: 5, geometryType: 'POINT',
         validationStatus: 'VALID', coordinates: { type: 'Point', coordinates: [-60, -10] },
         supplier: { name: 'Farm A', commodity: 'COFFEE' }
       }
@@ -31,12 +31,18 @@ describe('GET /api/production-places/geojson', () => {
     expect(json.type).toBe('FeatureCollection')
     expect(json.features).toHaveLength(1)
     expect(json.features[0].geometry).toEqual({ type: 'Point', coordinates: [-60, -10] })
-    expect(json.features[0].properties).toMatchObject({ name: 'Plot A', supplier: 'Farm A', validationStatus: 'VALID' })
+    // 5 ha submitted as a POINT triggers the large-plot-as-point rule -> high.
+    expect(json.features[0].properties).toMatchObject({
+      name: 'Plot A',
+      supplier: 'Farm A',
+      validationStatus: 'VALID',
+      riskLevel: 'high'
+    })
   })
 
   it('skips places without stored coordinates', async () => {
     mockPrisma.productionPlace.findMany.mockResolvedValue([
-      { id: 'p1', name: 'X', areaHectares: 1, geometryType: 'POINT', validationStatus: 'PENDING', coordinates: null, supplier: { name: 'S', commodity: 'COCOA' } }
+      { id: 'p1', name: 'X', country: 'GH', areaHectares: 1, geometryType: 'POINT', validationStatus: 'PENDING', coordinates: null, supplier: { name: 'S', commodity: 'COCOA' } }
     ])
     const res = await GET()
     const json = await res.json()
