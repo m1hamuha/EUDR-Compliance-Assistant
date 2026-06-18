@@ -11,6 +11,7 @@ interface Analytics {
   totalSuppliers: number
   totalPlaces: number
   complianceScore: number
+  riskIndex: number
   funnel: { invited: number; inProgress: number; completed: number; validated: number; error: number }
   responseRate: number
   completionRate: number
@@ -116,10 +117,11 @@ export default function ComplianceReportPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
               <Metric label="Suppliers" value={String(analytics.totalSuppliers)} />
               <Metric label="Completion rate" value={`${analytics.completionRate}%`} />
               <Metric label="Validation pass rate" value={`${analytics.validationPassRate}%`} />
+              <Metric label="Deforestation risk" value={`${analytics.riskIndex}/100`} />
               <Metric label="Avg time to compliance" value={analytics.avgTimeToCompleteDays !== null ? `${analytics.avgTimeToCompleteDays}d` : '—'} />
             </div>
 
