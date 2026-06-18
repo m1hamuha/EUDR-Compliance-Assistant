@@ -390,7 +390,15 @@ const en: Dict = {
   'mit.task.highRiskEvidence': 'Obtain risk-mitigation evidence for a high-risk country of origin',
   'mit.task.addArea': 'Add the missing plot area',
   'mit.task.awaitValidation': 'Review pending geolocation that has not yet passed validation',
-  'mit.task.collectGeo': 'Collect geolocation — no production places submitted yet'
+  'mit.task.collectGeo': 'Collect geolocation — no production places submitted yet',
+
+  // map color modes
+  'map.colorBy.status': 'Status',
+  'map.colorBy.risk': 'Risk',
+
+  // supplier detail risk
+  'sd.risk': 'Risk assessment',
+  'sd.risk.none': 'No risk factors flagged.'
 }
 
 const de: Dict = {
@@ -774,7 +782,15 @@ const de: Dict = {
   'mit.task.highRiskEvidence': 'Nachweise zur Risikominderung für ein Herkunftsland mit hohem Risiko einholen',
   'mit.task.addArea': 'Fehlende Flächengröße ergänzen',
   'mit.task.awaitValidation': 'Ausstehende Geolokalisierung prüfen, die die Validierung noch nicht bestanden hat',
-  'mit.task.collectGeo': 'Geolokalisierung erfassen — noch keine Produktionsstandorte übermittelt'
+  'mit.task.collectGeo': 'Geolokalisierung erfassen — noch keine Produktionsstandorte übermittelt',
+
+  // map color modes
+  'map.colorBy.status': 'Status',
+  'map.colorBy.risk': 'Risiko',
+
+  // supplier detail risk
+  'sd.risk': 'Risikobewertung',
+  'sd.risk.none': 'Keine Risikofaktoren festgestellt.'
 }
 
 export const dictionaries: Record<Locale, Dict> = { en, de }

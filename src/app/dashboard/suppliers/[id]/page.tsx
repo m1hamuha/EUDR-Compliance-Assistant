@@ -8,7 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, MapPin, Square, CheckCircle2, AlertTriangle, Clock } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
 import { useI18n } from '@/lib/i18n'
+import { assessSupplier, type RiskLevel } from '@/lib/risk'
 import { COMMODITY_LABELS, formatDate } from '@/lib/utils'
+import type { Commodity } from '@prisma/client'
 
 interface ProductionPlace {
   id: string
@@ -39,6 +41,18 @@ const validationBadge: Record<string, { variant: 'success' | 'destructive' | 'se
   VALID: { variant: 'success', labelKey: 'val.VALID' },
   INVALID: { variant: 'destructive', labelKey: 'val.INVALID' },
   PENDING: { variant: 'secondary', labelKey: 'val.PENDING' }
+}
+
+const riskBadge: Record<RiskLevel, { variant: 'success' | 'warning' | 'destructive'; key: string }> = {
+  negligible: { variant: 'success', key: 'risk.level.negligible' },
+  standard: { variant: 'warning', key: 'risk.level.standard' },
+  high: { variant: 'destructive', key: 'risk.level.high' }
+}
+
+const SEVERITY_COLOR: Record<string, string> = {
+  critical: 'text-red-600',
+  warning: 'text-amber-600',
+  info: 'text-muted-foreground'
 }
 
 export default function SupplierDetailPage() {
@@ -90,6 +104,38 @@ export default function SupplierDetailPage() {
 
   const validCount = supplier.productionPlaces.filter((p) => p.validationStatus === 'VALID').length
 
+  const risk = assessSupplier({
+    id: supplier.id,
+    name: supplier.name,
+    country: supplier.country,
+    commodity: supplier.commodity as Commodity,
+    places: supplier.productionPlaces.map((p) => ({
+      id: p.id,
+      name: p.name,
+      country: p.country,
+      areaHectares: p.areaHectares,
+      geometryType: p.geometryType,
+      validationStatus: p.validationStatus
+    }))
+  })
+
+  // Distinct actionable risk factors across the supplier's plots (highest
+  // severity wins), so the detail view explains the risk without repeating
+  // every plot's factors.
+  const severityRank: Record<string, number> = { critical: 2, warning: 1, info: 0 }
+  const factorMap = new Map<string, { severity: string; messageKey: string }>()
+  for (const place of risk.places) {
+    for (const f of place.factors) {
+      const existing = factorMap.get(f.code)
+      if (!existing || severityRank[f.severity] > severityRank[existing.severity]) {
+        factorMap.set(f.code, { severity: f.severity, messageKey: f.messageKey })
+      }
+    }
+  }
+  const factors = Array.from(factorMap.values()).sort(
+    (a, b) => severityRank[b.severity] - severityRank[a.severity]
+  )
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={() => router.push('/dashboard/suppliers')} className="-ml-2">
@@ -104,8 +150,29 @@ export default function SupplierDetailPage() {
             {COMMODITY_LABELS[supplier.commodity] ?? supplier.commodity} • {supplier.country}
           </p>
         </div>
-        <Badge variant="outline" className="text-sm">{t(`status.${supplier.status}`)}</Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={riskBadge[risk.level].variant} className="text-sm">{t(riskBadge[risk.level].key)}</Badge>
+          <Badge variant="outline" className="text-sm">{t(`status.${supplier.status}`)}</Badge>
+        </div>
       </div>
+
+      <Card>
+        <CardHeader><CardTitle>{t('sd.risk')}</CardTitle></CardHeader>
+        <CardContent>
+          {factors.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('sd.risk.none')}</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {factors.map((f, i) => (
+                <li key={i} className={`text-sm flex items-start gap-2 ${SEVERITY_COLOR[f.severity] ?? ''}`}>
+                  <span className="mt-0.5">•</span>
+                  <span>{t(f.messageKey)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>{t('sd.details')}</CardTitle></CardHeader>

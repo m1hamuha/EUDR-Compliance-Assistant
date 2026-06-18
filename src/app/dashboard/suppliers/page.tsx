@@ -34,6 +34,7 @@ import Papa from 'papaparse'
 import { formatDate, COMMODITY_LABELS } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
 import { useI18n } from '@/lib/i18n'
+import type { RiskLevel } from '@/lib/risk'
 import type { SupplierStatus, Commodity } from '@prisma/client'
 
 interface Supplier {
@@ -63,9 +64,16 @@ const statusKeys: Record<SupplierStatus, string> = {
   ERROR: 'status.ERROR'
 }
 
+const riskBadge: Record<RiskLevel, { variant: 'success' | 'warning' | 'destructive'; key: string }> = {
+  negligible: { variant: 'success', key: 'risk.level.negligible' },
+  standard: { variant: 'warning', key: 'risk.level.standard' },
+  high: { variant: 'destructive', key: 'risk.level.high' }
+}
+
 export default function SuppliersPage() {
   const { t } = useI18n()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [riskBySupplier, setRiskBySupplier] = useState<Record<string, RiskLevel>>({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -117,13 +125,28 @@ export default function SuppliersPage() {
     }
   }, [])
 
+  const fetchRisk = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/risk')
+      if (res.ok) {
+        const data = await res.json()
+        const map: Record<string, RiskLevel> = {}
+        for (const s of data.risk?.suppliers ?? []) map[s.id] = s.level
+        setRiskBySupplier(map)
+      }
+    } catch {
+      // non-fatal — risk badges are an enhancement, not required for the list
+    }
+  }, [])
+
   useEffect(() => {
     fetchSuppliers()
   }, [fetchSuppliers])
 
   useEffect(() => {
     fetchUsage()
-  }, [fetchUsage])
+    fetchRisk()
+  }, [fetchUsage, fetchRisk])
 
   const handleAddSupplier = async () => {
     setAddError(null)
@@ -426,6 +449,11 @@ export default function SuppliersPage() {
                       <Badge variant={statusColors[supplier.status]}>
                         {t(statusKeys[supplier.status])}
                       </Badge>
+                      {riskBySupplier[supplier.id] && (
+                        <Badge variant={riskBadge[riskBySupplier[supplier.id]].variant}>
+                          {t(riskBadge[riskBySupplier[supplier.id]].key)}
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground mt-1">
                       {COMMODITY_LABELS[supplier.commodity]} • {supplier.country} • {t('sup.places', { n: supplier._count.productionPlaces })}
