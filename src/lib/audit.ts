@@ -17,6 +17,7 @@ export type AuditAction =
   | 'SETTINGS_UPDATE'
   | 'PASSWORD_CHANGE'
   | 'PLAN_UPGRADE'
+  | 'DDS_RECORD'
 
 export interface AuditContext {
   clientId: string

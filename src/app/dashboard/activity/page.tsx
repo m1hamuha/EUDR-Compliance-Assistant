@@ -14,7 +14,8 @@ import {
   CreditCard,
   Users,
   MapPin,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  FileCheck
 } from 'lucide-react'
 import { apiFetch } from '@/lib/api-client'
 import { useI18n } from '@/lib/i18n'
@@ -45,12 +46,14 @@ const ACTION_META: Record<string, { label: string; icon: React.ElementType; colo
   EXPORT_DOWNLOAD: { label: 'Export downloaded', icon: FileDown, color: 'text-slate-500' },
   SETTINGS_UPDATE: { label: 'Settings updated', icon: SettingsIcon, color: 'text-amber-600' },
   PASSWORD_CHANGE: { label: 'Password changed', icon: KeyRound, color: 'text-amber-600' },
-  PLAN_UPGRADE: { label: 'Plan changed', icon: CreditCard, color: 'text-emerald-600' }
+  PLAN_UPGRADE: { label: 'Plan changed', icon: CreditCard, color: 'text-emerald-600' },
+  DDS_RECORD: { label: 'Statement recorded', icon: FileCheck, color: 'text-emerald-600' }
 }
 
 function describe(log: AuditLog): string {
   const m = log.metadata ?? {}
   if (log.action === 'PLAN_UPGRADE' && m.from && m.to) return `${m.from} → ${m.to}`
+  if (log.action === 'DDS_RECORD' && m.reference) return String(m.reference)
   if (m.name) return String(m.name)
   if (log.action === 'EXPORT_GENERATE' && m.commodity) return String(m.commodity)
   return log.resourceType
