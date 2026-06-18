@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -120,9 +121,11 @@ export default function SettingsPage() {
                   : 'Your subscription is active and in good standing.'}
               </div>
             </div>
-            <Button>
-              {user?.plan === 'TRIAL' ? 'Upgrade' : 'Manage'}
-            </Button>
+            <Link href="/dashboard/billing">
+              <Button>
+                {user?.plan === 'TRIAL' ? 'Upgrade' : 'Manage'}
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>

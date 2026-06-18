@@ -66,6 +66,18 @@ describe('POST /api/suppliers (invitation)', () => {
     }))
     expect(res.status).toBe(201)
   })
+
+  it('rejects creation with 403 when the plan supplier limit is reached', async () => {
+    mockPrisma.client.findUnique.mockResolvedValue({ id: 'client-1', companyName: 'Coffee Co', plan: 'TRIAL' })
+    mockPrisma.supplier.count.mockResolvedValue(3) // TRIAL cap is 3
+
+    const res = await createSupplier(jsonRequest({
+      name: 'Farm D', country: 'BR', commodity: 'COFFEE'
+    }))
+    const json = await res.json()
+    expect(res.status).toBe(403)
+    expect(json.error.code).toBe('PLAN_LIMIT_REACHED')
+  })
 })
 
 describe('POST /api/suppliers/[id]/remind', () => {
