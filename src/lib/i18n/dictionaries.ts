@@ -408,7 +408,15 @@ const en: Dict = {
   'dds.history.empty': 'No statements recorded yet.',
   'dds.col.ref': 'Reference',
   'dds.col.date': 'Date',
-  'dds.col.conclusion': 'Conclusion'
+  'dds.col.conclusion': 'Conclusion',
+
+  // dashboard next best actions
+  'dash.nba.title': 'Next best actions',
+  'dash.nba.ready': 'Your Due Diligence Statement is ready to file',
+  'dash.nba.draft': 'Your statement needs attention before it can be filed',
+  'dash.nba.viewStatement': 'View statement',
+  'dash.nba.allClear': 'No outstanding actions — you’re on track. 🎉',
+  'dash.nba.viewAll': 'View all {n} actions'
 }
 
 const de: Dict = {
@@ -810,7 +818,15 @@ const de: Dict = {
   'dds.history.empty': 'Noch keine Erklärungen gespeichert.',
   'dds.col.ref': 'Referenz',
   'dds.col.date': 'Datum',
-  'dds.col.conclusion': 'Schlussfolgerung'
+  'dds.col.conclusion': 'Schlussfolgerung',
+
+  // dashboard next best actions
+  'dash.nba.title': 'Nächste sinnvolle Schritte',
+  'dash.nba.ready': 'Ihre Sorgfaltspflichterklärung ist bereit zur Einreichung',
+  'dash.nba.draft': 'Ihre Erklärung erfordert Aufmerksamkeit, bevor sie eingereicht werden kann',
+  'dash.nba.viewStatement': 'Erklärung ansehen',
+  'dash.nba.allClear': 'Keine offenen Maßnahmen — Sie sind auf Kurs. 🎉',
+  'dash.nba.viewAll': 'Alle {n} Maßnahmen ansehen'
 }
 
 export const dictionaries: Record<Locale, Dict> = { en, de }
