@@ -76,6 +76,16 @@ export function buildDemoSuppliers(): DemoSupplier[] {
       ]
     },
     {
+      // High-risk benchmark country (Myanmar) + a large plot submitted as a point:
+      // showcases the country-benchmark dimension and a clear "action required"
+      // verdict with both high-risk-evidence and request-polygon mitigation tasks.
+      name: 'Bago Teak Traders', country: 'MM', commodity: 'WOOD', contactEmail: 'demo+bago@example.com',
+      status: 'COMPLETED', invitationDaysAgo: 15, completedDaysAgo: 6,
+      places: [
+        { name: 'Teak Block 3', areaHectares: 9.6, geometryType: 'POINT', coordinates: point(96.49, 17.33), country: 'MM', validationStatus: 'VALID' }
+      ]
+    },
+    {
       name: 'Mekong Rubber Collective', country: 'VN', commodity: 'RUBBER', contactEmail: 'demo+mekong@example.com',
       status: 'IN_PROGRESS', invitationDaysAgo: 4, completedDaysAgo: null,
       places: [
