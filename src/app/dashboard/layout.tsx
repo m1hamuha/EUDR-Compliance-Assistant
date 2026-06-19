@@ -83,10 +83,10 @@ export default function DashboardLayout({
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex items-center gap-2 h-16 px-6 border-b">
-          <div className="h-8 w-8 rounded-lg bg-emerald-600 flex items-center justify-center">
+          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/20">
             <Leaf className="h-5 w-5 text-white" />
           </div>
-          <span className="font-semibold text-lg">EUDR Assistant</span>
+          <span className="font-bold text-lg tracking-tight">EUDR Assistant</span>
           <Button
             variant="ghost"
             size="icon"
@@ -106,10 +106,10 @@ export default function DashboardLayout({
                 key={item.key}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                   isActive
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-emerald-50 text-emerald-700 font-semibold"
+                    : "text-gray-600 font-medium hover:bg-emerald-50/60 hover:text-emerald-700"
                 )}
                 onClick={() => setSidebarOpen(false)}
               >
