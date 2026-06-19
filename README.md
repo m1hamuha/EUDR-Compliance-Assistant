@@ -1,16 +1,52 @@
 # EUDR Compliance Assistant
 
-A comprehensive web application for companies to comply with the EU Deforestation Regulation (EUDR) by collecting, validating, and managing supplier production location data with geographic coordinates.
+**The compliance decision engine for the EU Deforestation Regulation.** Operators
+placing coffee, cocoa, cattle, soy, palm oil, rubber or wood on the EU market must
+collect plot-level geolocation, prove the goods carry *no more than negligible
+deforestation risk*, and file a Due Diligence Statement before shipping. This
+application runs that entire loop end-to-end — from collecting supplier data to
+generating the statement an operator submits to the EU Information System (TRACES).
+
+It is not just a data collector: it **assesses deforestation risk**, tells the
+operator **exactly what to fix**, and turns a clean verdict into the **legal
+artifact** they file.
+
+## The compliance loop
+
+```
+Collect → Validate → Assess risk → See what to fix → Remediate → Generate & record DDS → Export
+```
 
 ## Features
 
-- **Compliance Analytics**: A Compliance Readiness Score, collection funnel, time-to-compliance, and an at-risk supplier list with one-click bulk reminders to drive completion
-- **Supplier Management**: Invite and manage suppliers across your supply chain
-- **Geolocation Collection**: Collect production place coordinates using interactive maps
-- **EUDR Validation**: Automatic validation of GeoJSON data against EUDR requirements
-- **Compliance Reporting**: Generate export-ready reports for EU Information System submission
-- **Audit Logging**: Complete audit trail for compliance verification
-- **Multi-language Support**: English and German localization
+- **Deforestation-risk engine** — combines the EU country benchmark (Reg. (EU)
+  2025/1093), commodity deforestation pressure, and plot-level verifiability into a
+  per-plot conclusion (negligible / standard / high), a per-supplier rollup, and a
+  portfolio verdict: **Ready to file / Due diligence in progress / Action required**.
+- **Due Diligence Statement (DDS)** — generates the EUDR Art. 33 statement (HS Annex I
+  headings, reference number, commodity lines, risk conclusion), downloadable as a
+  machine-readable JSON for TRACES and printable as a PDF. Only *fileable* when every
+  plot is negligible-risk; otherwise a clearly-marked DRAFT. **Statement history** keeps
+  a durable, audit-logged record of what was assessed and filed.
+- **Risk-driven mitigation plan** — turns every risk factor into a concrete,
+  prioritized task (re-collect geolocation, request polygon, obtain mitigation
+  evidence…) with one-click supplier reminders, surfaced on the Risk page and as
+  "next best actions" on the dashboard home.
+- **Compliance analytics** — a **risk-weighted** Compliance Readiness Score (blends
+  data completeness with the deforestation-risk index), collection funnel,
+  time-to-compliance, momentum trend, daily score snapshots, and an at-risk supplier
+  list with bulk reminders.
+- **Supply-chain map** — every production place plotted, recolourable by validation
+  status **or** deforestation risk.
+- **Supplier management** — invite, import (CSV), and manage suppliers; a public
+  portal where invited suppliers submit geolocation; risk badges inline everywhere.
+- **EUDR validation** — automatic GeoJSON validation against EUDR geometry rules.
+- **Exports** — export-ready GeoJSON bundles for EU Information System submission, with
+  optimization and validation reporting.
+- **Plans & billing, account security, audit log** — subscription tiers with usage
+  limits, change-password / export / delete-account, and a complete activity timeline.
+- **Fully bilingual** — every screen localized in English and German, enforced by a
+  dictionary key-parity test.
 
 ## Tech Stack
 
@@ -85,13 +121,21 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to access the application.
 
-### Try it in 30 seconds
+### Try it in 60 seconds
 
 1. Sign up for an account (it logs you straight into the dashboard).
 2. On the empty dashboard, click **“Load sample data”** to populate a realistic
-   8-supplier supply chain.
-3. Open **Analytics** to see the Compliance Readiness Score, funnel, momentum,
-   and the at-risk list, then **Compliance report** for the printable one-pager.
+   multi-commodity supply chain spanning low-, standard- and high-risk origins.
+3. The dashboard greets you with **next best actions**. Follow them:
+   - **Risk** → see the portfolio verdict ("Action required"), the per-supplier risk
+     breakdown, and the prioritized action plan.
+   - **Statement** → generate the Due Diligence Statement; it shows as a DRAFT until the
+     risk is resolved, then becomes fileable (download JSON / print PDF) and is recorded.
+   - **Analytics** → the risk-weighted readiness score, funnel and momentum;
+     **Compliance report** for the printable one-pager.
+   - **Map** → toggle plot colours between validation status and deforestation risk.
+
+See **[DEMO.md](./DEMO.md)** for a full guided walkthrough.
 
 `GET /api/health` returns a DB-checked status for uptime monitoring.
 
@@ -106,30 +150,46 @@ src/
 │   ├── thank-you/         # Supplier submission confirmation
 │   ├── supplier/[token]/  # Public supplier data-collection portal
 │   ├── dashboard/         # Authenticated app  (/dashboard, /dashboard/*)
-│   │   ├── page.tsx       # Dashboard overview
-│   │   ├── suppliers/     # Supplier management
+│   │   ├── page.tsx       # Dashboard overview + next-best-actions
+│   │   ├── suppliers/     # Supplier management + detail (with risk)
+│   │   ├── map/           # Supply-chain map (status / risk colouring)
+│   │   ├── analytics/     # Risk-weighted score, funnel, momentum, at-risk
+│   │   ├── risk/          # Risk assessment + mitigation action plan
+│   │   ├── dds/           # Due Diligence Statement + history
 │   │   ├── exports/       # Export generation & history
-│   │   └── settings/      # Account settings
+│   │   ├── billing/       # Plans & usage
+│   │   ├── activity/      # Audit timeline
+│   │   └── settings/      # Account settings & security
+│   ├── report/            # Printable compliance report
 │   └── api/
 │       ├── auth/          # login, register, refresh, me, logout
 │       ├── dashboard/     # aggregated dashboard stats
+│       ├── analytics/     # analytics + lazy score snapshots
+│       ├── risk/          # portfolio risk assessment
+│       ├── mitigation/    # prioritized mitigation plan
+│       ├── dds/           # statement + records (history)
 │       ├── health/        # DB-checked health endpoint
-│       ├── suppliers/     # Supplier CRUD + bulk import
-│       ├── production-places/
+│       ├── suppliers/     # Supplier CRUD + bulk import + reminders
+│       ├── production-places/  # CRUD + GeoJSON (risk-enriched)
+│       ├── account/       # usage, plan, password, export, delete
+│       ├── audit/         # activity timeline
 │       ├── portal/        # Supplier portal submit/complete
 │       └── exports/       # Export generation
 ├── components/            # ui/ , forms/ , maps/ , error/
 ├── lib/
+│   ├── risk.ts            # Deforestation-risk engine (country benchmark + scoring)
+│   ├── dds.ts             # Due Diligence Statement builder (HS codes, ref numbers)
+│   ├── mitigation.ts      # Risk factors → prioritized remediation tasks
+│   ├── analytics.ts       # Risk-weighted score, funnel, momentum, snapshots
 │   ├── auth.ts            # JWT, password, rate limiting, sessions
 │   ├── prisma.ts          # Database client (pg driver adapter)
 │   ├── eudr-validator.ts  # GeoJSON validation
-│   ├── geojson.ts         # Export generation
-│   ├── api-response.ts    # Standardised API envelope + correlation IDs
+│   ├── i18n/              # EN/DE dictionaries + provider (key-parity tested)
 │   ├── env-validation.ts  # Runtime env-var validation (Zod)
 │   ├── email.ts           # Transactional email (Resend)
 │   └── audit.ts           # Audit logging
 ├── stores/  hooks/  types/
-└── __tests__/             # Unit tests (lib + API route handlers)
+└── __tests__/             # Unit tests (lib + API route handlers); 217 tests
 ```
 
 ## Routing & Authentication
