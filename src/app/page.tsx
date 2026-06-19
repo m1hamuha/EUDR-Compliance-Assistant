@@ -58,7 +58,7 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-slate-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-emerald-600 flex items-center justify-center">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/20">
               <Leaf className="h-5 w-5 text-white" />
             </div>
             <span className="font-bold text-lg tracking-tight">EUDR Assistant</span>
@@ -207,7 +207,7 @@ export default function HomePage() {
       <footer className="border-t border-slate-100 py-10">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-emerald-600 flex items-center justify-center">
+            <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
               <Leaf className="h-4 w-4 text-white" />
             </div>
             <span className="font-semibold text-slate-700">EUDR Compliance Assistant</span>

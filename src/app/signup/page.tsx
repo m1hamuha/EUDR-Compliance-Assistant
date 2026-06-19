@@ -97,7 +97,7 @@ export default function SignupPage() {
             <LanguageSwitcher />
           </div>
           <div className="flex justify-center mb-4">
-            <div className="h-14 w-14 rounded-2xl bg-emerald-600 flex items-center justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-600/20">
               <Leaf className="h-7 w-7 text-white" />
             </div>
           </div>
