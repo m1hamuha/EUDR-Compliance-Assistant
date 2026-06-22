@@ -41,6 +41,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Keep <html lang> in sync with the active locale so assistive technologies
+  // announce content with the correct pronunciation (WCAG 3.1.1/3.1.2).
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.lang = locale
+    }
+  }, [locale])
+
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l)
     if (typeof window !== 'undefined') {
