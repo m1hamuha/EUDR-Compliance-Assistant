@@ -54,6 +54,13 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      {/* Skip to content — keyboard / screen-reader bypass (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded-lg focus:bg-emerald-600 focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-white focus:shadow-lg"
+      >
+        {t('a11y.skipToContent')}
+      </a>
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur bg-white/80 border-b border-slate-100">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -75,6 +82,7 @@ export default function HomePage() {
         </div>
       </header>
 
+      <main id="main-content">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-50 via-white to-white" />
@@ -202,6 +210,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-100 py-10">
