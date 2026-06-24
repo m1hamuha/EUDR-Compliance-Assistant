@@ -20,6 +20,7 @@ const en: Dict = {
   'common.signOut': 'Sign out',
   'common.getStarted': 'Get started',
   'common.language': 'Language',
+  'a11y.skipToContent': 'Skip to main content',
 
   // nav
   'nav.dashboard': 'Dashboard',
@@ -448,6 +449,7 @@ const de: Dict = {
   'common.signOut': 'Abmelden',
   'common.getStarted': 'Loslegen',
   'common.language': 'Sprache',
+  'a11y.skipToContent': 'Zum Hauptinhalt springen',
 
   // nav
   'nav.dashboard': 'Übersicht',
