@@ -6,7 +6,7 @@ import { ProductionPlaceForm } from '@/components/forms/ProductionPlaceForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { LanguageProvider, useLanguage } from '@/hooks/useLanguage'
-import { Loader2, Globe, CheckCircle2 } from 'lucide-react'
+import { Loader2, Globe, CheckCircle2, AlertCircle } from 'lucide-react'
 
 interface SupplierData {
   id: string
@@ -29,6 +29,7 @@ function SupplierPortalContent() {
   const [loading, setLoading] = useState(true)
   const [submitted, setSubmitted] = useState(false)
   const [submittingPlace, setSubmittingPlace] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const token = typeof window !== 'undefined' 
     ? window.location.pathname.split('/supplier/')[1]?.split('/')[0] 
@@ -65,6 +66,7 @@ function SupplierPortalContent() {
     if (!supplier) return
 
     setSubmittingPlace(true)
+    setError(null)
     try {
       const response = await fetch('/api/portal/submit', {
         method: 'POST',
@@ -82,9 +84,12 @@ function SupplierPortalContent() {
           const data = await updatedResponse.json()
           setSupplier(data.supplier)
         }
+      } else {
+        setError(t('portal.error'))
       }
     } catch (error) {
       console.error('Failed to submit:', error)
+      setError(t('portal.error'))
     } finally {
       setSubmittingPlace(false)
     }
@@ -93,6 +98,7 @@ function SupplierPortalContent() {
   const handleComplete = async () => {
     if (!supplier) return
 
+    setError(null)
     try {
       const response = await fetch('/api/portal/complete', {
         method: 'POST',
@@ -102,9 +108,12 @@ function SupplierPortalContent() {
 
       if (response.ok) {
         router.push('/thank-you')
+      } else {
+        setError(t('portal.error'))
       }
     } catch (error) {
       console.error('Failed to complete:', error)
+      setError(t('portal.error'))
     }
   }
 
@@ -160,6 +169,17 @@ function SupplierPortalContent() {
             </div>
           </CardContent>
         </Card>
+
+        {error && (
+          <Card className="mb-6 border-red-200 bg-red-50" role="alert">
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="h-5 w-5" />
+                <span>{error}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {submitted && (
           <Card className="mb-6 border-green-200 bg-green-50">
