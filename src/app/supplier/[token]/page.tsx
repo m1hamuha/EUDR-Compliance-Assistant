@@ -187,10 +187,10 @@ function SupplierPortalContent() {
         )}
 
         {submitted && (
-          <Card className="mb-6 border-green-200 bg-green-50">
+          <Card className="mb-6 border-green-200 bg-green-50" role="status" aria-live="polite">
             <CardContent className="py-4">
               <div className="flex items-center gap-2 text-green-700">
-                <CheckCircle2 className="h-5 w-5" />
+                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                 <span>{t('portal.success')}</span>
               </div>
             </CardContent>
