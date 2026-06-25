@@ -13,6 +13,7 @@ interface LanguageContextType {
 
 const translations: Record<Language, Record<string, string>> = {
   en: {
+    'portal.loading': 'Loading your data…',
     'portal.welcome': 'EUDR Supplier Data Collection',
     'portal.description': 'Please provide information about your production places for EUDR compliance.',
     'portal.productionPlace': 'Production Place',
@@ -42,6 +43,7 @@ const translations: Record<Language, Record<string, string>> = {
     'portal.german': 'Deutsch',
   },
   de: {
+    'portal.loading': 'Ihre Daten werden geladen…',
     'portal.welcome': 'EUDR-Lieferantendatenerfassung',
     'portal.description': 'Bitte geben Sie Informationen über Ihre Produktionsstandorte für die EUDR-Compliance an.',
     'portal.productionPlace': 'Produktionsstandort',
