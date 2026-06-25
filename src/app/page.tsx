@@ -16,12 +16,19 @@ import { Button } from '@/components/ui/button'
 import { useI18n, LanguageSwitcher } from '@/lib/i18n'
 
 function PreviewGauge() {
+  const { t } = useI18n()
   const score = 78
   const r = 52
   const c = 2 * Math.PI * r
   return (
     <div className="relative flex items-center justify-center">
-      <svg width="132" height="132" className="-rotate-90">
+      <svg
+        width="132"
+        height="132"
+        className="-rotate-90"
+        role="img"
+        aria-label={`${t('landing.preview.readiness')}: ${score} / 100`}
+      >
         <circle cx="66" cy="66" r={r} fill="none" stroke="#e2e8f0" strokeWidth="11" />
         <circle cx="66" cy="66" r={r} fill="none" stroke="#059669" strokeWidth="11" strokeLinecap="round"
           strokeDasharray={c} strokeDashoffset={c - (score / 100) * c} />
