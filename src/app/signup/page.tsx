@@ -116,6 +116,7 @@ export default function SignupPage() {
               <Label htmlFor="companyName">{t('auth.companyName')}</Label>
               <Input
                 id="companyName"
+                autoComplete="organization"
                 placeholder="Your company name"
                 {...register('companyName')}
               />
@@ -129,6 +130,7 @@ export default function SignupPage() {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 placeholder="you@company.com"
                 {...register('email')}
               />
@@ -142,6 +144,7 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
                 placeholder={t('auth.passwordMin')}
                 {...register('password')}
               />
