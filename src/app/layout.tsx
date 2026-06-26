@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
 
@@ -35,6 +35,15 @@ export const metadata: Metadata = {
     description:
       "Automate EUDR geolocation data collection from suppliers, assess deforestation risk, and generate Due Diligence Statements.",
   },
+};
+
+// The product renders a light surface everywhere (white page, sticky white
+// header); there is no dark theme toggle. Pin the mobile UA chrome to white and
+// declare the colour scheme so dark-mode phones don't tint the toolbar or
+// auto-darken native form controls against the light UI.
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+  colorScheme: "light",
 };
 
 export default function RootLayout({
