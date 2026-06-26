@@ -14,6 +14,7 @@ interface LanguageContextType {
 const translations: Record<Language, Record<string, string>> = {
   en: {
     'portal.loading': 'Loading your data…',
+    'portal.invalidLink': 'Invalid or expired link',
     'portal.welcome': 'EUDR Supplier Data Collection',
     'portal.description': 'Please provide information about your production places for EUDR compliance.',
     'portal.productionPlace': 'Production Place',
@@ -44,6 +45,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   de: {
     'portal.loading': 'Ihre Daten werden geladen…',
+    'portal.invalidLink': 'Ungültiger oder abgelaufener Link',
     'portal.welcome': 'EUDR-Lieferantendatenerfassung',
     'portal.description': 'Bitte geben Sie Informationen über Ihre Produktionsstandorte für die EUDR-Compliance an.',
     'portal.productionPlace': 'Produktionsstandort',
