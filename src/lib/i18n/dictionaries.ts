@@ -21,6 +21,8 @@ const en: Dict = {
   'common.getStarted': 'Get started',
   'common.language': 'Language',
   'a11y.skipToContent': 'Skip to main content',
+  'a11y.openMenu': 'Open navigation menu',
+  'a11y.closeMenu': 'Close navigation menu',
 
   // nav
   'nav.dashboard': 'Dashboard',
@@ -450,6 +452,8 @@ const de: Dict = {
   'common.getStarted': 'Loslegen',
   'common.language': 'Sprache',
   'a11y.skipToContent': 'Zum Hauptinhalt springen',
+  'a11y.openMenu': 'Navigationsmenü öffnen',
+  'a11y.closeMenu': 'Navigationsmenü schließen',
 
   // nav
   'nav.dashboard': 'Übersicht',

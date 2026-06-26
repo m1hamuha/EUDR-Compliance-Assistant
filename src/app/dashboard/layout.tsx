@@ -91,6 +91,7 @@ export default function DashboardLayout({
             variant="ghost"
             size="icon"
             className="ml-auto lg:hidden"
+            aria-label={t('a11y.closeMenu')}
             onClick={() => setSidebarOpen(false)}
           >
             <X className="h-5 w-5" />
@@ -148,6 +149,8 @@ export default function DashboardLayout({
           <Button
             variant="ghost"
             size="icon"
+            aria-label={t('a11y.openMenu')}
+            aria-expanded={sidebarOpen}
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-5 w-5" />
