@@ -133,9 +133,12 @@ function SupplierPortalContent() {
   if (!supplier) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md mx-4">
+        <Card className="max-w-md mx-4 border-red-200 bg-red-50" role="alert">
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">Invalid or expired link</p>
+            <div className="flex items-center justify-center gap-2 text-red-700">
+              <AlertCircle className="h-5 w-5" aria-hidden="true" />
+              <span>{t('portal.invalidLink')}</span>
+            </div>
           </CardContent>
         </Card>
       </div>
