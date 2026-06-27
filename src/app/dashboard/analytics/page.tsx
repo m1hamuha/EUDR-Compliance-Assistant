@@ -334,7 +334,13 @@ export default function AnalyticsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex items-end justify-between gap-1 h-40">
+            <div
+              className="flex items-end justify-between gap-1 h-40"
+              role="img"
+              aria-label={t('an.weekly.aria', {
+                summary: data.weeklyCompletions.map((w) => `${w.weekStart.slice(5)} ${w.count}`).join(', ')
+              })}
+            >
               {data.weeklyCompletions.map((w) => (
                 <div key={w.weekStart} className="flex-1 flex flex-col items-center justify-end gap-1">
                   <div
