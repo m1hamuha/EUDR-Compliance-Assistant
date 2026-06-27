@@ -84,6 +84,7 @@ export default function MapPage() {
                   <button
                     key={mode}
                     type="button"
+                    aria-pressed={colorBy === mode}
                     onClick={() => setColorBy(mode)}
                     className={cn(
                       'px-3 py-1 rounded-md font-medium transition-colors',
