@@ -73,7 +73,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-sm shadow-emerald-600/20">
-              <Leaf className="h-5 w-5 text-white" />
+              <Leaf className="h-5 w-5 text-white" aria-hidden="true" />
             </div>
             <span className="font-bold text-lg tracking-tight">EUDR Assistant</span>
           </div>
@@ -97,7 +97,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 pt-20 pb-16 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-              <ShieldCheck className="h-3.5 w-3.5" />
+              <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               {t('landing.badge')}
             </span>
             <h1 className="mt-6 text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.05]">
@@ -109,7 +109,7 @@ export default function HomePage() {
               <Link href="/signup">
                 <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
                   {t('landing.cta.trial')}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
               <Link href="#how">
@@ -117,9 +117,9 @@ export default function HomePage() {
               </Link>
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-500">
-              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-600" /> {t('landing.trust.noCard')}</span>
-              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-600" /> {t('landing.trust.validation')}</span>
-              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-600" /> {t('landing.trust.audit')}</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-600" aria-hidden="true" /> {t('landing.trust.noCard')}</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-600" aria-hidden="true" /> {t('landing.trust.validation')}</span>
+              <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-emerald-600" aria-hidden="true" /> {t('landing.trust.audit')}</span>
             </div>
           </div>
 
@@ -169,7 +169,7 @@ export default function HomePage() {
             {steps.map((s, i) => (
               <div key={s.t} className="relative rounded-2xl bg-white border border-slate-200 p-7">
                 <div className="absolute -top-3 left-7 h-7 w-7 rounded-full bg-emerald-600 text-white text-sm font-bold flex items-center justify-center">{i + 1}</div>
-                <s.icon className="h-8 w-8 text-emerald-600 mt-2 mb-4" />
+                <s.icon className="h-8 w-8 text-emerald-600 mt-2 mb-4" aria-hidden="true" />
                 <h3 className="font-semibold text-lg mb-2">{t(s.t)}</h3>
                 <p className="text-slate-600 text-sm">{t(s.d)}</p>
               </div>
@@ -189,7 +189,7 @@ export default function HomePage() {
             {features.map((f) => (
               <div key={f.t} className="rounded-2xl border border-slate-200 p-7 hover:shadow-lg hover:border-emerald-200 transition-all">
                 <div className="h-11 w-11 rounded-xl bg-emerald-50 flex items-center justify-center mb-4">
-                  <f.icon className="h-5 w-5 text-emerald-600" />
+                  <f.icon className="h-5 w-5 text-emerald-600" aria-hidden="true" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">{t(f.t)}</h3>
                 <p className="text-slate-600 text-sm">{t(f.d)}</p>
@@ -210,7 +210,7 @@ export default function HomePage() {
               <Link href="/signup">
                 <Button size="lg" className="bg-white text-emerald-700 hover:bg-emerald-50">
                   {t('landing.cta2.button')}
-                  <ArrowRight className="h-4 w-4 ml-2" />
+                  <ArrowRight className="h-4 w-4 ml-2" aria-hidden="true" />
                 </Button>
               </Link>
             </div>
@@ -224,7 +224,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
-              <Leaf className="h-4 w-4 text-white" />
+              <Leaf className="h-4 w-4 text-white" aria-hidden="true" />
             </div>
             <span className="font-semibold text-slate-700">EUDR Compliance Assistant</span>
           </div>
