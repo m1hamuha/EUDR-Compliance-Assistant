@@ -366,7 +366,7 @@ export default function AnalyticsPage() {
               </Button>
             )}
           </div>
-          {reminderMsg && <p className="text-sm text-green-700 mt-2">{reminderMsg}</p>}
+          {reminderMsg && <p role="status" aria-live="polite" className="text-sm text-green-700 mt-2">{reminderMsg}</p>}
         </CardHeader>
         <CardContent>
           {data.atRisk.length === 0 ? (
