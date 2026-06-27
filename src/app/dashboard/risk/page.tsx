@@ -361,6 +361,7 @@ export default function RiskPage() {
                 <button
                   type="button"
                   onClick={() => toggle(s.id)}
+                  aria-expanded={isOpen}
                   className="flex w-full items-center justify-between gap-3 p-4 text-left hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-3 min-w-0">
