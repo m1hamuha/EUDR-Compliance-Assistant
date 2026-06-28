@@ -148,7 +148,7 @@ export default function DDSPage() {
       </div>
 
       {recordMsg && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800 print:hidden">
+        <div role="status" aria-live="polite" className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800 print:hidden">
           {recordMsg}
         </div>
       )}
