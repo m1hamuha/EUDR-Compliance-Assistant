@@ -202,7 +202,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {pwMessage && (
-            <div className={`rounded-lg px-3 py-2 text-sm ${pwMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700'}`}>
+            <div role="status" aria-live="polite" className={`rounded-lg px-3 py-2 text-sm ${pwMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-700'}`}>
               {pwMessage.text}
             </div>
           )}
