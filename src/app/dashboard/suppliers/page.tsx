@@ -278,7 +278,7 @@ export default function SuppliersPage() {
                   }}
                 />
                 {importResult && (
-                  <div className="text-sm rounded-lg border p-3 bg-gray-50">
+                  <div role="status" aria-live="polite" className="text-sm rounded-lg border p-3 bg-gray-50">
                     <p className="font-medium text-green-700">{t('sup.import.result', { n: importResult.created })}</p>
                     {importResult.errors.length > 0 && (
                       <ul className="mt-2 list-disc pl-5 text-red-600">
@@ -316,7 +316,7 @@ export default function SuppliersPage() {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 {addError && (
-                  <div className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">
+                  <div role="alert" className="rounded-lg bg-red-50 text-red-700 text-sm px-3 py-2">
                     {addError}{' '}
                     <Link href="/dashboard/billing" className="underline font-medium">{t('sup.viewPlans')}</Link>
                   </div>
