@@ -208,16 +208,16 @@ export default function SettingsPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>{t('set.pw.current')}</Label>
-              <Input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
+              <Label htmlFor="pw-current">{t('set.pw.current')}</Label>
+              <Input id="pw-current" type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>{t('set.pw.new')}</Label>
-              <Input type="password" placeholder={t('auth.passwordMin')} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
+              <Label htmlFor="pw-new">{t('set.pw.new')}</Label>
+              <Input id="pw-new" type="password" placeholder={t('auth.passwordMin')} value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>{t('set.pw.confirm')}</Label>
-              <Input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
+              <Label htmlFor="pw-confirm">{t('set.pw.confirm')}</Label>
+              <Input id="pw-confirm" type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />
             </div>
           </div>
           <Button onClick={handleChangePassword} disabled={pwSaving || !pw.current || !pw.next}>
