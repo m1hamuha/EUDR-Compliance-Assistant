@@ -63,13 +63,16 @@ export default function ActivityPage() {
   const { t } = useI18n()
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
 
   const load = useCallback(async () => {
     try {
       const res = await apiFetch('/api/audit?limit=100')
       if (res.ok) setLogs((await res.json()).logs ?? [])
+      else setLoadFailed(true)
     } catch (error) {
       console.error('Failed to load activity:', error)
+      setLoadFailed(true)
     } finally {
       setLoading(false)
     }
@@ -98,6 +101,8 @@ export default function ActivityPage() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : loadFailed ? (
+            <p role="alert" className="text-sm text-red-600 py-6 text-center">{t('act.loadError')}</p>
           ) : logs.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">{t('act.empty')}</p>
           ) : (
