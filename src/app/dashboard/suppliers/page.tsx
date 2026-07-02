@@ -86,6 +86,7 @@ export default function SuppliersPage() {
   const [importResult, setImportResult] = useState<{ created: number; errors: Array<{ row: number; error: string }> } | null>(null)
   const [usage, setUsage] = useState<{ used: number; max: number | null } | null>(null)
   const [addError, setAddError] = useState<string | null>(null)
+  const [loadFailed, setLoadFailed] = useState(false)
 
   const [newSupplier, setNewSupplier] = useState({
     name: '',
@@ -96,6 +97,7 @@ export default function SuppliersPage() {
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true)
+    setLoadFailed(false)
     try {
       const params = new URLSearchParams()
       if (search) params.set('search', search)
@@ -106,9 +108,12 @@ export default function SuppliersPage() {
       if (response.ok) {
         const data = await response.json()
         setSuppliers(data.suppliers ?? [])
+      } else {
+        setLoadFailed(true)
       }
     } catch (error) {
       console.error('Failed to fetch suppliers:', error)
+      setLoadFailed(true)
     } finally {
       setLoading(false)
     }
@@ -449,6 +454,10 @@ export default function SuppliersPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : loadFailed ? (
+            <p role="alert" className="text-sm text-red-600 py-8 text-center">
+              {t('sup.loadError')}
+            </p>
           ) : visibleSuppliers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {t('sup.empty')}
