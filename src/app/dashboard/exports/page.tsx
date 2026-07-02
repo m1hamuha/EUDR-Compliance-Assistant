@@ -141,12 +141,12 @@ export default function ExportsPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>{t('exp.commodity')}</Label>
+                <Label htmlFor="export-commodity">{t('exp.commodity')}</Label>
                 <Select
                   value={exportOptions.commodity}
                   onValueChange={(value) => setExportOptions({ ...exportOptions, commodity: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="export-commodity">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
