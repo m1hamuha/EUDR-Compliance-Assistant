@@ -151,6 +151,7 @@ const en: Dict = {
   'an.coverage': 'Country coverage',
   'an.empty.title': 'No data yet',
   'an.empty.sub': 'Invite suppliers and collect production data to see your compliance metrics.',
+  'an.loadError': 'Could not load analytics. Please try again later.',
 
   // map
   'map.title': 'Supply chain map',
@@ -586,6 +587,7 @@ const de: Dict = {
   'an.coverage': 'Länderabdeckung',
   'an.empty.title': 'Noch keine Daten',
   'an.empty.sub': 'Laden Sie Lieferanten ein und erfassen Sie Produktionsdaten, um Ihre Compliance-Kennzahlen zu sehen.',
+  'an.loadError': 'Analysen konnten nicht geladen werden. Bitte versuchen Sie es später erneut.',
 
   // map
   'map.title': 'Lieferkettenkarte',
