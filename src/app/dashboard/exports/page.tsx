@@ -52,6 +52,7 @@ export default function ExportsPage() {
   const { t } = useI18n()
   const [exports, setExports] = useState<Export[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -63,14 +64,18 @@ export default function ExportsPage() {
 
   const fetchExports = async () => {
     setLoading(true)
+    setLoadFailed(false)
     try {
       const response = await apiFetch('/api/exports')
       if (response.ok) {
         const data = await response.json()
         setExports(data.exports ?? [])
+      } else {
+        setLoadFailed(true)
       }
     } catch (error) {
       console.error('Failed to fetch exports:', error)
+      setLoadFailed(true)
     } finally {
       setLoading(false)
     }
@@ -230,6 +235,10 @@ export default function ExportsPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
+          ) : loadFailed ? (
+            <p role="alert" className="text-sm text-red-600 py-8 text-center">
+              {t('exp.loadError')}
+            </p>
           ) : exports.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               {t('exp.empty')}
