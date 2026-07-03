@@ -157,18 +157,23 @@ export default function AnalyticsPage() {
   const { t } = useI18n()
   const [data, setData] = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadFailed, setLoadFailed] = useState(false)
   const [reminding, setReminding] = useState(false)
   const [reminderMsg, setReminderMsg] = useState<string | null>(null)
 
   const fetchAnalytics = useCallback(async () => {
+    setLoadFailed(false)
     try {
       const res = await apiFetch('/api/analytics')
       if (res.ok) {
         const json = await res.json()
         setData(json.analytics)
+      } else {
+        setLoadFailed(true)
       }
     } catch (error) {
       console.error('Failed to load analytics:', error)
+      setLoadFailed(true)
     } finally {
       setLoading(false)
     }
@@ -212,6 +217,22 @@ export default function AnalyticsPage() {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (loadFailed && !data) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t('an.title')}</h1>
+          <p className="text-muted-foreground">{t('an.subtitle')}</p>
+        </div>
+        <Card>
+          <CardContent className="py-12">
+            <p role="alert" className="text-sm text-red-600 text-center">{t('an.loadError')}</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
